@@ -1,0 +1,22 @@
+check process dnsmasq
+    with pidfile /run/dnsmasq/dnsmasq.pid
+    group dns
+    group dnsmasq
+    start program = "/usr/sbin/service dnsmasq start"
+    stop  program = "/usr/sbin/service dnsmasq stop"
+    if failed
+        host <%= $conf->{address} ||= "127.0.0.1" %> port <%= $conf->{port} ||= 53 %>
+        use type udp protocol dns
+        with timeout 10 seconds for 1 cycle
+    then alert
+    if 5 restarts within 5 cycles then timeout
+    depends on dnsmasq_bin
+
+check file dnsmasq_bin
+    with path /usr/sbin/dnsmasq
+    group dnsmasq
+    if failed checksum        then unmonitor
+    if failed permission  755 then unmonitor
+    if failed uid root        then unmonitor
+    if failed gid root        then unmonitor
+

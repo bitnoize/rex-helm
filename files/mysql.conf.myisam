@@ -1,0 +1,4 @@
+[mysqld]
+default-storage-engine = myisam
+skip-innodb
+

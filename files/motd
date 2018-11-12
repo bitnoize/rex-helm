@@ -1,0 +1,4 @@
+<%= $banner %>
+
+This host is under (R)?ex control
+Last updated: <%= scalar localtime() %>

@@ -1,0 +1,28 @@
+LoadPlugin tail
+<Plugin "Tail">
+  <File "/var/log/mail.log">
+    Instance "postgrey"
+
+    <Match>
+      Regex "\\<action=greylist, reason=new\\>"
+      DSType "CounterInc"
+      Type "mail_counter"
+      Instance "greylisted"
+    </Match>
+ 
+    <Match>
+      Regex "\\<action=pass, reason=triplet found\\>"
+      DSType "CounterInc"
+      Type "mail_counter"
+      Instance "accepted"
+    </Match>
+ 
+    <Match>
+      Regex "\\<action=pass, reason=client whitelist\\>"
+      DSType "CounterInc"
+      Type "mail_counter"
+      Instance "client_whitelist"
+    </Match>
+  </File>
+</Plugin>
+

@@ -1,0 +1,15 @@
+/var/log/monit.log
+{
+    daily
+    rotate 1
+    maxage 1
+    missingok
+    create 640 root adm
+    notifempty
+    compress
+    delaycompress
+    postrotate
+        service monit reload > /dev/null
+    endscript
+}
+

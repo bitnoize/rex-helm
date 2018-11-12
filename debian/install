@@ -1,0 +1,5 @@
+cmdb            usr/share/rex-example
+files           usr/share/rex-example
+Rexfile         usr/share/rex-example
+ssh_config.dist usr/share/rex-example
+

@@ -1,0 +1,15 @@
+check program sensors
+    with path /usr/bin/sensors
+    group system
+    group sensors
+    if status != 0 then alert
+    depend sensors_bin
+
+check file sensors_bin
+    with path /usr/bin/sensors
+    group sensors
+    if failed checksum        then unmonitor
+    if failed permission  755 then unmonitor
+    if failed uid root        then unmonitor
+    if failed gid root        then unmonitor
+

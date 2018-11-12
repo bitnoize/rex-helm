@@ -1,0 +1,51 @@
+check process libvirt
+    with pidfile /run/libvirtd.pid
+    group system
+    group qemukvm
+    start program = "/usr/sbin/service libvirtd start"
+    stop  program = "/usr/sbin/service libvirtd stop"
+    if 5 restarts with 5 cycles then timeout
+    depend libvirt_bin
+
+check file libvirt_bin
+    with path /usr/sbin/libvirtd
+    group qemukvm
+    if failed checksum        then unmonitor
+    if failed permission  755 then unmonitor
+    if failed uid root        then unmonitor
+    if failed gid root        then unmonitor
+
+check process virtlog
+    with pidfile /run/virtlogd.pid
+    group system
+    group qemukvm
+    start program = "/usr/sbin/service virtlogd start"
+    stop  program = "/usr/sbin/service virtlogd stop"
+    if 5 restarts with 5 cycles then timeout
+    depend virtlog_bin
+
+check file virtlog_bin
+    with path /usr/sbin/virtlogd
+    group qemukvm
+    if failed checksum        then unmonitor
+    if failed permission  755 then unmonitor
+    if failed uid root        then unmonitor
+    if failed gid root        then unmonitor
+
+#check process virtlock
+#   with pidfile /run/virtlockd.pid
+#   group system
+#   group qemukvm
+#   start program = "/usr/sbin/service virtlockd start"
+#   stop  program = "/usr/sbin/service virtlockd stop"
+#   if 5 restarts with 5 cycles then timeout
+#   depend virtlock_bin
+
+#check file virtlock_bin
+#   with path /usr/sbin/virtlockd
+#   group qemukvm
+#   if failed checksum        then unmonitor
+#   if failed permission  755 then unmonitor
+#   if failed uid root        then unmonitor
+#   if failed gid root        then unmonitor
+

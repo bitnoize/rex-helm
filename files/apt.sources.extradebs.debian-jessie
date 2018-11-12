@@ -1,0 +1,4 @@
+# jessie-extradebs
+deb <%= $system->{extralink} %> jessie main
+deb-src <%= $system->{extralink} %> jessie main
+

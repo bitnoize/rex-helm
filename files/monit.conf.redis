@@ -1,0 +1,27 @@
+check process redis
+    with pidfile /run/redis/redis-server.pid
+    group database
+    group redis
+    start program = "/usr/sbin/service redis-server start"
+    stop  program = "/usr/sbin/service redis-server stop"
+    if failed
+        host <%= $conf->{address} ||= "127.0.0.1" %> port <%= $conf->{port} ||= 6379 %>
+        use type tcp protocol redis
+        with timeout 10 seconds for 1 cycle
+    then alert
+    if 5 restarts within 5 cycles then timeout
+    depend redis_bin
+
+check file redis_bin
+    with path /usr/bin/redis-server
+    group redis
+    if failed checksum        then unmonitor
+    if failed permission  755 then unmonitor
+    if failed uid root        then unmonitor
+    if failed gid root        then unmonitor
+
+check file redis_dump
+    with path /var/lib/redis/dump.rdb
+    group redis
+    if size > <%= $conf->{dumpsize} ||= 100 %> MB then alert
+

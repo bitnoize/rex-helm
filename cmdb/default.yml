@@ -1,0 +1,251 @@
+#
+# Configuration Management Database
+#
+
+system:
+  active:       1
+# rootpw:       ''
+  grubcmd:      'quiet nomodeset net.ifnames=0 biosdevname=0'
+# timezone:     Etc/UTC
+# kernver:      ''
+# paranoid:     0
+# aptproxy:     http://127.0.0.1:9080
+  backports:    1
+# extradebs:    0
+# extralink:    http://debs:secret@debs.test.net
+# packages:     [ ]
+# swapfile:     /swap
+# swapdize:     1024k
+
+network:
+  active:       1
+# resolver:     [ 8.8.8.8, 8.8.4.4 ]
+# ethernet:     { }
+# bridge:       { }
+
+shaper:
+  active:       0
+# ifb:          0
+# link:         [ 100Mbit, 100Mbit ]
+# priv:         [  10Mbit,  90Mbit ]
+# misc:         [   1Mbit,   2Mbit ]
+
+syslog:
+  active:       1
+# restart:      1
+
+firewall:
+  active:       1
+# type:         none
+# restart:      1
+
+openssh:
+  active:       1
+# address:      [ 0.0.0.0 ]
+# port:         22
+# restart:      1
+
+ntp:
+  active:       1
+# restart:      1
+
+iperf:
+  active:       0
+# restart:      1
+# server:       0
+# address:      0.0.0.0
+# port:         5281
+# targets:      [ ]
+
+qemukvm:
+  active:       0
+# restart:      1
+
+dnsmasq:
+  active:       0
+# restart:      1
+# resolver:     1
+# address:      [ 127.0.0.1 ]
+# interface:    [ lo ]
+# port:         53
+# upstream:     [ 8.8.8.8, 8.8.4.4 ]
+# confs:        [ ]
+
+unbound:
+  active:       0
+# restart:      1
+# resolver:     0
+# address:      [ 127.0.0.1 ]
+# port:         53
+# allowed:      [ 127.0.0.1/8 ]
+  confs:        [ qname-minimisation, root-auto-trust-anchor-file ]
+
+nginx:
+  active:       0
+# confs:        [ ]
+# snippets:     [ ]
+# secrets:      [ ]
+# restart:      1
+# sites:
+#   'default':
+#     enabled:      1
+#     address:      [ 127.0.0.1 ]
+
+mysql:
+  active:       0
+# restart:      1
+# address:      127.0.0.1
+# port:         3306
+# rootpw:       'secret'
+# confs:        [ ]
+
+redis:
+  active:       0
+# restart:      1
+
+postfix:
+  active:       0
+# restart:      1
+
+rblcheck:
+  active:       0
+# hosts:        [ 127.0.0.1 ]
+# lists:        [ zen.spamhaus.org ]
+
+monit:
+  active:       1
+# restart:      1
+# address:      127.0.0.1
+# port:         2812
+  auth:         monit:secret
+  mmonit:       "https://monit:secret\@monit.test.net:3127/collector"
+  confs:
+    'system':
+      enabled:      1
+
+    'cron':
+      enabled:      1
+
+    'syslog':
+      enabled:      1
+
+    'openssh':
+      enabled:      1
+
+    'ntp':
+      enabled:      1
+
+    'sensors':
+      enabled:      0
+
+    'qemukvm':
+      enabled:      0
+
+    'iperf':
+      enabled:      0
+      port:         5281
+
+    'dnsmasq':
+      enabled:      0
+#     address:      127.0.0.1
+#     port:         53
+#     timeout:      30
+
+    'unbound':
+      enabled:      0
+#     address:      127.0.0.1
+#     port:         53
+#     timeout:      30
+
+    'mysql':
+      enabled:      0
+
+    'redis':
+      enabled:      0
+
+    'nginx':
+      enabled:      0
+
+    'postfix':
+      enabled:      0
+
+    'rblcheck':
+      enabled:      0
+      timeout:      30
+
+collectd:
+  active:       0
+# restart:      1
+# server:       0
+# interval:     60
+# remote:       graph.test.net
+# address:      0.0.0.0
+# port:         25826
+# interface:    eth0
+# username:     stats
+# password:     'secret'
+  confs:
+    'syslog':
+      enabled:      1
+
+    'network':
+      enabled:      1
+
+    'cpu':
+      enabled:      1
+
+    'memory':
+      enabled:      1
+
+    'swap':    
+      enabled:      1
+
+    'load':    
+      enabled:      1
+
+    'interface':
+      enabled:      1
+
+#   'netlink':
+#     enabled:      0
+
+    'rrdtool': 
+      enabled:      1
+
+mmonit:
+  active:       0
+# restart:      1
+# version:      3.7.1
+# platform:     linux-x64
+# path:         /opt/mmonit
+# address:      0.0.0.0
+# port:         3127
+# schema:       mysql://monit:monit@127.0.0.1/mmonit
+# owner:        Unknown
+# lecense:      none
+
+rsync:
+  active:       0
+# restart:      1
+# address:      127.0.0.1
+# port:         873
+# storage:      /var/www/stuff
+
+gitweb:
+  active:       0
+# projectroot:  /var/lib/git
+# site_name:    Simple
+
+freight:
+  active:       0
+# libdir:       /var/lib/freight
+# cachedir:     /var/www/freight
+# origin:       extradebs
+# label:        Extradebs
+# gpgkey:       build@extradebs
+
+collectdweb:
+  active:       0
+# restart:      1
+# workdir:      /var/www/collectd-web
+

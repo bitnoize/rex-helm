@@ -1,0 +1,7 @@
+LoadPlugin swap
+
+#<Plugin swap>
+# ReportByDevice false
+# ReportBytes true
+#</Plugin>
+

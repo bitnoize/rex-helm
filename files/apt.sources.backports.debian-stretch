@@ -1,0 +1,4 @@
+# stretch-backports
+deb http://httpredir.debian.org/debian/ stretch-backports main contrib non-free
+deb-src http://httpredir.debian.org/debian/ stretch-backports main contrib non-free
+

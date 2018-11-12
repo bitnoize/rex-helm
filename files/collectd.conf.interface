@@ -1,0 +1,14 @@
+LoadPlugin interface
+
+<Plugin "interface">
+  Interface "/^eth/"
+  IgnoreSelected false
+</Plugin>
+
+#<Plugin interface>
+#	Interface "eth0"
+#	IgnoreSelected false
+#	ReportInactive true
+#	UniqueName false
+#</Plugin>
+

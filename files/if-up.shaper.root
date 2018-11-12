@@ -1,0 +1,80 @@
+#!/bin/bash
+
+LINK_RATE="<%= $shaper->{link}->[0] %>"
+LINK_CEIL="<%= $shaper->{link}->[1] %>"
+
+BASE_RATE="<%= $shaper->{base}->[0] %>"
+BASE_CEIL="<%= $shaper->{base}->[1] %>"
+
+MISC_RATE="<%= $shaper->{misc}->[0] %>"
+MISC_CEIL="<%= $shaper->{misc}->[1] %>"
+
+# Only ethX and ifbX interfaces acceptable
+[[ "$IFACE" =~ ^(eth|ifb)[0-9]$ ]] || exit 0
+
+# eth0 - egress traffic (from internal to external) aka исходящий
+# ifb0 - ingress traffic aka входящий
+
+# Check root shaper for exists
+[ -e "/run/network/shaper-root.$IFACE" ] && exit 0
+
+# Add primary discipline with default class
+/sbin/tc qdisc add dev $IFACE root handle 1: htb default 90
+
+# Add primary class with link bandwidth
+/sbin/tc class add dev $IFACE parent 1: classid 1:1 htb \
+  rate $LINK_RATE ceil $LINK_CEIL
+
+# Class for priority server traffic
+/sbin/tc class add dev $IFACE parent 1:1 classid 1:10 htb \
+  rate $BASE_RATE ceil $BASE_CEIL prio 1
+
+# All other traffic class
+/sbin/tc class add dev $IFACE parent 1:1 classid 1:90 htb \
+  rate $MISC_RATE ceil $MISC_CEIL prio 9
+
+# Configure Stochastic Fairness
+/sbin/tc qdisc add dev $IFACE parent 1:10 handle 10: sfq perturb 10
+/sbin/tc qdisc add dev $IFACE parent 1:90 handle 90: sfq perturb 10
+
+touch "/run/network/shaper-root.$IFACE"
+
+exit 0
+
+
+
+
+
+#if [[ "$IFACE" =~ ^eth ]]; then
+#elif [[ "$IFACE" =~ ^ifb ]]; then
+#fi
+
+
+
+#IFACE_IPS=$( /bin/ip -4 -o addr show scope global dev $IFACE | \
+#  awk '{gsub(/\/.*/, " ",$4); print $4}' )
+
+# for ip in $IFACE_IPS; do
+#   echo "Filter $IFACE ICMP dst $ip => 1:10" >> $LOG_FILE
+#   /sbin/tc filter add dev $IFACE protocol ip parent 1: prio 1 u32 \
+#     match ip dst $ip match ip protocol 1 0xff flowid 1:10
+#
+#   echo "Filter $IFACE UDP dst $ip => 1:10" >> $LOG_FILE
+#   /sbin/tc filter add dev $IFACE protocol ip parent 1: prio 2 u32 \
+#     match ip dst $ip match ip protocol 17 0xff flowid 1:10
+#
+#   echo "Filter $IFACE SSH dst $ip => 1:10" >> $LOG_FILE
+#   /sbin/tc filter add dev $IFACE protocol ip parent 1: prio 2 u32 \
+#     match ip dst $ip match ip protocol 6 0xff match ip sport 22 0xffff flowid 1:10
+#
+#   echo "Filter $IFACE HTTP dst $ip => 1:10" >> $LOG_FILE
+#   /sbin/tc filter add dev $IFACE protocol ip parent 1: prio 3 u32 \
+#     match ip dst $ip match ip protocol 6 0xff match ip sport 80 0xffff flowid 1:10
+#
+#   echo "Filter $IFACE HTTPS dst $ip => 1:10" >> $LOG_FILE
+#   /sbin/tc filter add dev $IFACE protocol ip parent 1: prio 3 u32 \
+#     match ip dst $ip match ip protocol 6 0xff match ip sport 443 0xffff flowid 1:10
+#
+# done
+
+

@@ -1,0 +1,3 @@
+# Enable forwarding packets between interfaces
+net.ipv4.ip_forward=1
+

@@ -1,0 +1,18 @@
+# OpenSSH Rulz!
+
+HashKnownHosts no
+ForwardAgent yes
+
+IdentityFile ~/.ssh/my_own_key
+
+Host sonata
+  User root
+  HostName 192.168.10.10
+
+#
+# Traffic via proxy
+#
+
+#Host *
+# ProxyCommand socat STDIO SOCKS4A:127.0.0.1:%h:%p,socksport=9050
+

@@ -1,0 +1,10 @@
+/var/log/aptitude
+{
+    weekly
+    rotate 1
+    maxage 7
+    compress
+    missingok
+    notifempty
+}
+

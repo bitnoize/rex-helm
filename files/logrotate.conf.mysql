@@ -1,0 +1,22 @@
+/var/log/mysql/mysql.log
+/var/log/mysql/mysql-slow.log
+/var/log/mysql/mariadb-slow.log
+/var/log/mysql/error.log
+{
+    daily
+    rotate 1
+    maxage 1
+    missingok
+    compress
+    create 640 mysql adm
+    sharedscripts
+    postrotate
+        test -x /usr/bin/mysqladmin || exit 0
+
+        if [ -f $(my_print_defaults --mysqld | grep -m 1 -oP "pid-file=\K.+$") ]; then
+            mysqladmin --defaults-file=/etc/mysql/debian.cnf --local flush-error-log \
+                flush-engine-log flush-general-log flush-slow-log
+        fi
+    endscript
+}
+

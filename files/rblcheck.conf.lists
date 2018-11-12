@@ -1,0 +1,5 @@
+# RBL databases
+# <%= Rex::Malta::header( ) %>
+
+<%= join "\n", map { "$_" } @{ $rblcheck->{lists} } %>
+

@@ -1,0 +1,16 @@
+/var/log/nginx/*.log
+{
+    daily
+    rotate 7
+    maxage 7
+    missingok
+    compress
+    delaycompress
+    notifempty
+    create 0640 www-data adm
+    sharedscripts
+    postrotate
+        service nginx rotate >/dev/null 2>&1
+    endscript
+}
+

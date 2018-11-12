@@ -1,0 +1,17 @@
+check process ntp
+    with pidfile /run/ntpd.pid
+    group system
+    group ntp
+    start program = "/usr/sbin/service ntp start"
+    stop  program = "/usr/sbin/service ntp stop"
+    if 5 restarts within 5 cycles then timeout
+    depend ntp_bin
+
+check file ntp_bin
+    with path /usr/sbin/ntpd
+    group ntp
+    if failed checksum        then unmonitor
+    if failed permission  755 then unmonitor
+    if failed uid root        then unmonitor
+    if failed gid root        then unmonitor
+

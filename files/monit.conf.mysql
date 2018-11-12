@@ -1,0 +1,18 @@
+check process mysql
+    with pidfile /run/mysqld/mysqld.pid
+    group database
+    group mysql
+    start program = "/usr/sbin/service mysql start"
+    stop  program = "/usr/sbin/service mysql stop"
+    if failed unix /run/mysqld/mysqld.sock protocol mysql then restart
+    if 5 restarts with 5 cycles then timeout
+    depend mysql_bin
+
+check file mysql_bin
+    with path /usr/sbin/mysqld
+    group mysql
+    if failed checksum        then unmonitor
+    if failed permission  755 then unmonitor
+    if failed uid root        then unmonitor
+    if failed gid root        then unmonitor
+

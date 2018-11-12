@@ -1,0 +1,6 @@
+auto eth0
+iface eth0 inet static
+    address <%= $ethernet->{'eth0'}{address} %>
+    netmask <%= $ethernet->{'eth0'}{netmask} %>
+    gateway <%= $ethernet->{'eth0'}{gateway} %>
+

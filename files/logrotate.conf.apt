@@ -1,0 +1,11 @@
+/var/log/apt/term.log
+/var/log/apt/history.log
+{
+    weekly
+    rotate 1
+    maxage 7
+    compress
+    missingok
+    notifempty
+}
+

@@ -1,0 +1,8 @@
+LoadPlugin cpu
+
+#<Plugin cpu>
+#	ReportByCpu true
+#	ReportByState true
+#	ValuesPercentage false
+#</Plugin>
+

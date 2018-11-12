@@ -1,0 +1,5 @@
+# RBL hosts
+# <%= Rex::Malta::header( ) %>
+
+<%= join "\n", map { "$_" } @{ $rblcheck->{hosts} } %>
+

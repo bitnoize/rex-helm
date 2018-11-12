@@ -1,0 +1,12 @@
+LoadPlugin mysql
+
+<Plugin "mysql">
+  <Database "<%= $conf->{database} ||= 'mysql' %>">
+    Host "localhost"
+    Socket "<%= $conf->{socket} ||= '/run/mysqld/mysqld.sock' %>"
+#   MasterStats true
+#   SlaveStats true
+#   SlaveNotifications true
+  </Database>
+</Plugin>
+

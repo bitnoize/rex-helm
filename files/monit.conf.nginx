@@ -1,0 +1,22 @@
+check process nginx
+    pidfile /run/nginx.pid
+    group www
+    group nginx
+    start program = "/usr/sbin/service nginx start"
+    stop  program = "/usr/sbin/service nginx stop"
+    if failed
+        host <%= $conf->{address} ||= "127.0.0.1" %> port <%= $conf->{port} ||= 80 %>
+        use type tcp protocol http request /nginx-status
+        with timeout 10 seconds for 1 cycle
+    then alert
+    if 5 restarts with 5 cycles then timeout
+    depend nginx_bin
+
+check file nginx_bin
+    with path /usr/sbin/nginx
+    group nginx
+    if failed checksum        then unmonitor
+    if failed permission  755 then unmonitor
+    if failed uid root        then unmonitor
+    if failed gid root        then unmonitor
+

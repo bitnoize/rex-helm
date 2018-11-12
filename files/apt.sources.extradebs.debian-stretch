@@ -1,0 +1,4 @@
+# stretch-extradebs
+deb <%= $system->{extralink} %> stretch main
+deb-src <%= $system->{extralink} %> stretch main
+

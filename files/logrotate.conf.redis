@@ -1,0 +1,10 @@
+/var/log/redis/redis-server.log
+{
+    daily
+    rotate 1
+    maxage 1
+    missingok
+    compress
+    notifempty
+}
+

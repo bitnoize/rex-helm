@@ -1,0 +1,10 @@
+LoadPlugin redis
+
+<Plugin redis>
+  <Node "<%= $conf->{node} ||= 'localnode' %>">
+    Host "<%= $conf->{host} ||= 'localhost' %>"
+    Port "<%= $conf->{port} ||= 6379 %>"
+#   Timeout 2000
+  </Node>
+</Plugin>
+

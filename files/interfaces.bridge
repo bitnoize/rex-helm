@@ -1,0 +1,7 @@
+auto hub0
+iface hub0 inet dhcp
+    bridge_ports none
+    bridge_stp off
+    bridge_fd 0
+    bridge_maxwait 0
+
