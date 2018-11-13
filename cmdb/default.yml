@@ -7,6 +7,7 @@ system:
 # rootpw:       ''
   grubcmd:      'quiet nomodeset net.ifnames=0 biosdevname=0'
 # timezone:     Etc/UTC
+# release:      debian-stretch
 # kernver:      ''
 # paranoid:     0
 # aptproxy:     http://127.0.0.1:9080
@@ -69,7 +70,7 @@ dnsmasq:
 # interface:    [ lo ]
 # port:         53
 # upstream:     [ 8.8.8.8, 8.8.4.4 ]
-# confs:        [ ]
+  confs:        [ upstream ]
 
 unbound:
   active:       0

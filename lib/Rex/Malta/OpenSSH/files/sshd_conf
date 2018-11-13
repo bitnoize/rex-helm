@@ -1,0 +1,51 @@
+# sshd_config(5) - SSH server configuration
+# <%= Rex::Malta::header( ) %>
+
+Port <%= $openssh->{port} %>
+<%= join "\n", map { sprintf "ListenAddress %s", $_ } @{ $openssh->{address} } %>
+Protocol 2
+
+#HostKey /etc/ssh/ssh_host_rsa_key
+#HostKey /etc/ssh/ssh_host_ecdsa_key
+#HostKey /etc/ssh/ssh_host_ed25519_key
+
+SyslogFacility AUTH
+LogLevel INFO
+
+StrictModes yes
+LoginGraceTime 120
+PermitRootLogin yes
+PermitEmptyPasswords no
+
+PasswordAuthentication yes
+PubkeyAuthentication yes
+HostbasedAuthentication no
+ChallengeResponseAuthentication no
+
+# Kerberos options
+#KerberosAuthentication no
+#KerberosGetAFSToken no
+#KerberosOrLocalPasswd yes
+#KerberosTicketCleanup yes
+
+# GSSAPI options
+#GSSAPIAuthentication no
+#GSSAPICleanupCredentials yes
+
+GatewayPorts clientspecified
+X11Forwarding yes
+X11DisplayOffset 10
+PrintMotd no
+PrintLastLog yes
+TCPKeepAlive yes
+#UseLogin no
+
+#MaxStartups 10:30:60
+#Banner /etc/issue.net
+
+AcceptEnv LANG LC_*
+
+Subsystem sftp /usr/lib/openssh/sftp-server
+
+UsePAM yes
+

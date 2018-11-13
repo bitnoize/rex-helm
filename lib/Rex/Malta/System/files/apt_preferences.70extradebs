@@ -1,0 +1,3 @@
+Package: *
+Pin: release o=extradebs
+Pin-Priority: 700

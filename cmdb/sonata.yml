@@ -4,6 +4,7 @@
 
 system:
   rootpw:       'very!secret'
+  release:      debian-stretch
   packages:     [ socat, tmux, mc ]
 
 network:
