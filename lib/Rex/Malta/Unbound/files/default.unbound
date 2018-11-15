@@ -1,0 +1,17 @@
+UNBOUND_ENABLE="true"
+
+# Whether to automatically update the root trust anchor file
+ROOT_TRUST_ANCHOR_UPDATE="true"
+
+# File in which to store the root trust anchor
+ROOT_TRUST_ANCHOR_FILE="/var/lib/unbound/root.key"
+
+# Provide unbound's ip to resolvconf
+RESOLVCONF="false"
+
+# Configure as forwarders
+RESOLVCONF_FORWARDERS="false"
+
+ulimit -Hn 10240
+ulimit -Sn 10240
+

@@ -1,0 +1,18 @@
+GRUB_DEFAULT=0
+GRUB_TIMEOUT=1
+GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Debian`
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash net.ifnames=0 biosdevname=0"
+GRUB_CMDLINE_LINUX=""
+
+# Text mode
+GRUB_TERMINAL=console
+
+# Graphics mode
+#GRUB_GFXMODE="800x600x32"
+
+# Don't pass "root=UUID=xxx" to kernel
+#GRUB_DISABLE_LINUX_UUID="true"
+
+# Disable generation of recovery mode menu
+#GRUB_DISABLE_RECOVERY="true"
+

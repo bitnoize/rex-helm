@@ -10,9 +10,9 @@ sub config {
 
   my $network = {
     active      => $config->{active}    // 0,
-    resolver    => $config->{resolver}  // [ qw/8.8.8.8 8.8.4.4/ ],
-    ethernet    => $config->{ethernet}  // { },
-    bridge      => $config->{bridge}    // { },
+    resolver    => $config->{resolver}  || [ qw/8.8.8.8 8.8.4.4/ ],
+    ethernet    => $config->{ethernet}  || { },
+    bridge      => $config->{bridge}    || { },
   };
 
   inspect $network if Rex::Malta::DEBUG;
@@ -29,7 +29,10 @@ task 'setup' => sub {
 
   file "/etc/resolv.conf", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
-    content => template( "\@resolv.conf" );
+    content => template( "files/resolv.conf" ),
+    on_change => sub {
+      Rex::Logger::info( "Resolver changed" => 'info' )
+    };
 
   #
   # Interfaces
@@ -75,7 +78,7 @@ task 'setup' => sub {
 
   file "/etc/dhcp/dhclient-enter-hooks.d/nodnsupdate", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
-    content => template( "\@dhclient.hook.nodnsupdate" );
+    content => template( "files/dhclient-enter-hooks.nodnsupdate" );
 
   file "/etc/gai.conf", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
@@ -98,16 +101,3 @@ task 'status' => sub {
 };
 
 1;
-
-__DATA__
-
-@resolv.conf
-<%= join "\n", map { "nameserver $_" } @{ $network->{resolver} } %>
-@end
-
-@dhclient.hook.nodnsupdate
-make_resolv_conf() {
-    :
-}
-@end
-

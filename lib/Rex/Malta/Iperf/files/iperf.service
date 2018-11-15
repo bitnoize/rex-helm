@@ -1,0 +1,16 @@
+[Unit]
+Description=iperf
+Requires=network.target
+
+[Service]
+Type=simple
+Restart=always
+SyslogIdentifier=iperf
+Environment=ADDRESS=0.0.0.0
+Environment=PORT=5281
+EnvironmentFile=-/etc/default/iperf
+ExecStart=/usr/bin/iperf -s -B ${ADDRESS} -p ${PORT} $OPTIONS
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,2 @@
+NTPD_OPTS="-g"
+

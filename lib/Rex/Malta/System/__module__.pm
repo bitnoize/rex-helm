@@ -12,19 +12,19 @@ sub config {
 
   my $system = {
     active      => $config->{active}    // 0,
-    rootpw      => $config->{rootpw}    // "",
-    grubcmd     => $config->{grubcmd}   // "",
-    timezone    => $config->{timezone}  // "Etc/UTC",
-    release     => $config->{release}   // "debian-stretch",
-    kernver     => $config->{kernver}   // "",
+    rootpw      => $config->{rootpw}    || "",
+    grubcmd     => $config->{grubcmd}   || "",
+    timezone    => $config->{timezone}  || "Etc/UTC",
+    release     => $config->{release}   || "debian-stretch",
+    kernver     => $config->{kernver}   || "",
     paranoid    => $config->{paranoid}  // 0,
-    aptproxy    => $config->{aptproxy}  // "http://127.0.0.1:9080",
+    aptproxy    => $config->{aptproxy}  || "http://127.0.0.1:9080",
     backports   => $config->{backports} // 0,
     extradebs   => $config->{extradebs} // 0,
-    extralink   => $config->{extralink} // "http://debs:secret\@debs.test.net",
-    packages    => $config->{packages}  // [ ],
-    swapfile    => $config->{swapfile}  // "/swap",
-    swapsize    => $config->{swapsize}  // "1024k"
+    extralink   => $config->{extralink} || "",
+    packages    => $config->{packages}  || [ ],
+    swapfile    => $config->{swapfile}  || "/swap",
+    swapsize    => $config->{swapsize}  || "1024k"
   };
 
   my @release =  qw/debian-jessie debian-stretch/;
@@ -76,7 +76,7 @@ task 'setup', sub {
   if ( is_dir "/boot/grub" ) {
     file "/etc/default/grub", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
-      content => template( "\@default.grub" ),
+      content => template( "files/default.grub" ),
       on_change => sub {
         run 'grub_update',
           command => "update-grub";
@@ -293,26 +293,6 @@ task 'firsttime' => sub {
 1;
 
 __DATA__
-
-@default.grub
-GRUB_DEFAULT=0
-GRUB_TIMEOUT=1
-GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Debian`
-GRUB_CMDLINE_LINUX_DEFAULT="quiet splash net.ifnames=0 biosdevname=0"
-GRUB_CMDLINE_LINUX=""
-
-# Text mode
-GRUB_TERMINAL=console
-
-# Graphics mode
-#GRUB_GFXMODE="800x600x32"
-
-# Don't pass "root=UUID=xxx" to kernel
-#GRUB_DISABLE_LINUX_UUID="true"
-
-# Disable generation of recovery mode menu
-#GRUB_DISABLE_RECOVERY="true"
-@end
 
 @swapon
 dd if=/dev/zero of=<%= $system->{swapfile} %> bs=1024 count=<%= $system->{swapsize} %>

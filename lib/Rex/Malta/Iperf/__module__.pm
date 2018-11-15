@@ -12,10 +12,16 @@ sub config {
     active      => $config->{active}    // 0,
     server      => $config->{server}    // 0,
     restart     => $config->{restart}   // 1,
-    address     => $config->{address}   // "0.0.0.0",
-    port        => $config->{port}      // 5001,
-    targets     => $config->{targets}   // [ ],
+    address     => $config->{address}   || "0.0.0.0",
+    port        => $config->{port}      || 5281,
+    targets     => $config->{targets}   || [ ],
+    monit       => $config->{monit}     || { },
   };
+
+  $iperf->{monit}{enabled}  //= 0;
+  $iperf->{monit}{address}  ||= $iperf->{address};
+  $iperf->{monit}{port}     ||= $iperf->{port};
+  $iperf->{monit}{timeout}  ||= 10;
 
   inspect $iperf if Rex::Malta::DEBUG;
 
@@ -37,11 +43,11 @@ task 'setup' => sub {
   if ( $iperf->{server} ) {
     file "/etc/default/iperf", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
-      content => template( "\@default.iperf" );
+      content => template( "files/default.iperf" );
 
     file "/etc/systemd/system/iperf.service", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
-      content => template( "\@iperf.service" ),
+      content => template( "files/iperf.service" ),
       on_change => sub {
         run 'systemd_restart', timeout => 10,
           command => "systemctl daemon-reload";
@@ -49,6 +55,8 @@ task 'setup' => sub {
 
     service 'iperf', ensure => "started";
     service 'iperf' => "restart" if $iperf->{restart};
+
+    Rex::Logger::info( "Iperf configured as server" => 'info' );
   }
 
   else {
@@ -68,17 +76,26 @@ task 'setup' => sub {
   file "/usr/local/bin/speedtest.run", ensure => 'present',
     owner => 'root', group => 'root', mode => 755,
     content => template( "\@speedtest.run" );
+
+  if ( is_dir "/etc/monit" ) {
+    file "/etc/monit/conf-available/iperf", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/monit.conf.iperf" );
+
+    if ( $iperf->{monit}{enabled} ) {
+      symlink "/etc/monit/conf-available/iperf",
+        "/etc/monit/conf-enabled/iperf";
+    }
+
+    else {
+      unlink "/etc/monit/conf-enabled/iperf";
+    }
+  }
 };
 
 task 'clean' => sub {
   return unless my $iperf = config;
 
-  file [
-    "/etc/logrotate.d/iperf",
-    "/etc/rsyslog.d/iperf.conf",
-  ], ensure => 'absent';
-
-  service 'rsyslog' => 'restart';
 };
 
 task 'remove' => sub {
@@ -87,10 +104,13 @@ task 'remove' => sub {
   pkg [ qw/iperf/ ], ensure => 'absent';
 
   file [
-    "/etc/iperf",
-    "/etc/default/iperf",
+    "/etc/iperf", "/etc/default/iperf",
     "/etc/systemd/system/iperf.service",
     "/var/lib/iperf",
+    "/usr/local/bin/speedtest",
+    "/usr/local/bin/speedtest.run",
+    "/etc/monit/conf-available/iperf",
+    "/etc/monit/conf-enabled/iperf",
   ], ensure => 'absent';
 
   run 'systemd_restart', timeout => 10,
@@ -100,14 +120,8 @@ task 'remove' => sub {
 task 'speedtest' => sub {
   return unless my $iperf = config;
 
-  run 'speedtest_run', timeout => 3600,
+  run 'speedtest', timeout => 3600,
     command => "speedtest";
-};
-
-task 'purge' => sub {
-  return unless my $iperf = config;
-
-  map { unlink "/var/lib/iperf/$_" } list_files "/var/lib/iperf";
 };
 
 task 'status' => sub {
@@ -144,30 +158,6 @@ task 'fetch' => sub {
 1;
 
 __DATA__
-
-@default.iperf
-ADDRESS="<%= $iperf->{address} %>"
-PORT="<%= $iperf->{port} %>"
-OPTIONS=""
-@end
-
-@iperf.service
-[Unit]
-Description=iperf
-Requires=network.target
-
-[Service]
-Type=simple
-Restart=always
-SyslogIdentifier=iperf
-Environment=ADDRESS=0.0.0.0
-Environment=PORT=5001
-EnvironmentFile=-/etc/default/iperf
-ExecStart=/usr/bin/iperf -s -B ${ADDRESS} -p ${PORT} $OPTIONS
-
-[Install]
-WantedBy=multi-user.target
-@end
 
 @speedtest
 #!/bin/bash

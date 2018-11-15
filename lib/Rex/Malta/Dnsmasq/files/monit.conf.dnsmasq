@@ -5,9 +5,10 @@ check process dnsmasq
     start program = "/usr/sbin/service dnsmasq start"
     stop  program = "/usr/sbin/service dnsmasq stop"
     if failed
-        host <%= $conf->{address} ||= "127.0.0.1" %> port <%= $conf->{port} ||= 53 %>
+        host <%= $dnsmasq->{monit}{address} %>
+        port <%= $dnsmasq->{monit}{port} %>
         use type udp protocol dns
-        with timeout 10 seconds for 1 cycle
+        with timeout <%= $dnsmasq->{monit}{timeout} %> seconds for 1 cycle
     then alert
     if 5 restarts within 5 cycles then timeout
     depends on dnsmasq_bin

@@ -1,0 +1,9 @@
+#DOMAIN_SUFFIX="$(dnsdomainname)"
+#DNSMASQ_OPTS="--conf-file=/etc/dnsmasq.alt"
+
+# Whether or not to run the dnsmasq daemon
+ENABLED=1
+
+# Search this drop directory for configuration options
+CONFIG_DIR=/etc/dnsmasq.d,.dpkg-dist,.dpkg-old,.dpkg-new
+

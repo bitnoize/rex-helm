@@ -5,7 +5,8 @@ check process postgrey
     start program = "/usr/sbin/service postgrey start"
     stop  program = "/usr/sbin/service postgrey stop"
     if failed
-        host <%= $conf->{address} ||= "127.0.0.1" %> port <%= $conf->{port} ||= 10030 %>
+        host <%= $postfix->{address} %>
+        port <%= $postfix->{port} %>
         use type tcp with protocol smtp
         with timeout 10 seconds for 2 times within 3 cycles
     then alert

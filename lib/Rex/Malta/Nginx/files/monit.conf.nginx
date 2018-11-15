@@ -5,9 +5,10 @@ check process nginx
     start program = "/usr/sbin/service nginx start"
     stop  program = "/usr/sbin/service nginx stop"
     if failed
-        host <%= $conf->{address} ||= "127.0.0.1" %> port <%= $conf->{port} ||= 80 %>
+        host <%= $nginx->{monit}{address} %>
+        port <%= $nginx->{monit}{port} %>
         use type tcp protocol http request /nginx-status
-        with timeout 10 seconds for 1 cycle
+        with timeout <%= $nginx->{monit}{timeout} %> seconds for 1 cycle
     then alert
     if 5 restarts with 5 cycles then timeout
     depend nginx_bin

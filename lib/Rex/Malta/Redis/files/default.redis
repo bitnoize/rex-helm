@@ -1,0 +1,3 @@
+# Call ulimit -n with this argument prior to invoking Redis itself
+ULIMIT=65536
+

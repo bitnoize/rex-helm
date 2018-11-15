@@ -1,6 +1,6 @@
 check program rblcheck
     with path "/usr/bin/rblcheck"
-    with timeout 60 seconds
+    with timeout <%= $rblcheck->{monit}{timeout} %> seconds
     group rblcheck
     if status != 0 for 1 cycles then alert
 

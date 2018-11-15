@@ -1,0 +1,24 @@
+# URIs to check for running guests
+#URIS=default
+
+# Action taken on host boot ( start | ignore )
+#ON_BOOT=ignore
+
+# Number of seconds to wait between each guest start
+#START_DELAY=0
+
+# Action taken on host shutdown ( suspend | shutdown )
+#ON_SHUTDOWN=shutdown
+
+# Shutdown guests concurrently
+#PARALLEL_SHUTDOWN=0
+
+# Shutdown guests timeout
+#SHUTDOWN_TIMEOUT=300
+
+# Bypass the file system cache
+#BYPASS_CACHE=0
+
+# Sync guest time on domain resume
+#SYNC_TIME=1
+

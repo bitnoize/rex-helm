@@ -9,8 +9,9 @@ sub config {
   return unless my $config = Rex::Malta::config( syslog => @_ );
 
   my $syslog = {
-    active      => $config->{active}  // 0,
-    restart     => $config->{restart} // 1,
+    active      => $config->{active}    // 0,
+    restart     => $config->{restart}   // 1,
+    monit       => $config->{monit}     // 0,
   };
 
   inspect $syslog if Rex::Malta::DEBUG;
@@ -26,7 +27,7 @@ task 'setup' => sub {
 
   file "/etc/default/rsyslog", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
-    content => template( "\@default.rsyslog" );
+    content => template( "files/default.rsyslog" );
 
   file "/etc/rsyslog.conf", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
@@ -47,9 +48,20 @@ task 'setup' => sub {
       content => template( "files/logrotate.conf.$name" );
   }
 
-# file "/etc/cron.daily/cleanup", ensure => 'present',
-#   owner => 'root', group => 'root', mode => 755,
-#   content => template( "files/cron.daily.cleanup" );
+  if ( is_dir "/etc/monit" ) {
+    file "/etc/monit/conf-available/syslog", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/monit.conf.syslog" );
+
+    if ( $syslog->{monit}{enabled} ) {
+      symlink "/etc/monit/conf-available/syslog",
+        "/etc/monit/conf-enabled/syslog";
+    }
+
+    else {
+      unlink "/etc/monit/conf-enabled/syslog";
+    }
+  }
 };
 
 task 'clean' => sub {
@@ -72,6 +84,12 @@ task 'logrotate' => sub {
 task 'remove' => sub {
   my $syslog = config -force;
 
+  # Do NOT remove rsyslog and logrotate
+
+  file [
+    "/etc/monit/conf-available/syslog",
+    "/etc/monit/conf-enabled/syslog",
+  ], ensure => 'absent';
 };
 
 task 'status' => sub {
@@ -80,10 +98,3 @@ task 'status' => sub {
 };
 
 1;
-
-__DATA__
-
-@default.rsyslog
-RSYSLOGD_OPTIONS=""
-@end
-

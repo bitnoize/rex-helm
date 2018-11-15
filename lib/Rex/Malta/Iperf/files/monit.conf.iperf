@@ -5,9 +5,10 @@ check process iperf
     start program = "/usr/sbin/service iperf start"
     stop  program = "/usr/sbin/service iperf stop"
     if failed
-        host <%= $conf->{address} ||= "127.0.0.1" %> port <%= $conf->{port} ||= 5001 %>
+        host <%= $iperf->{monit}{address} %>
+        port <%= $iperf->{monit}{port} %>
         use type tcp
-        with timeout 30 seconds for 1 cycle
+        with timeout <%= $iperf->{monit}{timeout} %> seconds for 1 cycle
     then alert
     if 5 restarts within 5 cycles then timeout
     depend iperf_bin

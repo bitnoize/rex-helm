@@ -9,12 +9,19 @@ sub config {
   return unless my $config = Rex::Malta::config( mysql => @_ );
 
   my $mysql = {
-    active      => $config->{active}  // 0,
-    restart     => $config->{restart} // 1,
-    address     => $config->{address} // "127.0.0.1",
-    port        => $config->{port}    // 3306,
-    rootpw      => $config->{rootpw}  // "",
+    active      => $config->{active}    // 0,
+    restart     => $config->{restart}   // 1,
+    address     => $config->{address}   || "127.0.0.1",
+    port        => $config->{port}      || 3306,
+    rootpw      => $config->{rootpw}    || "",
+    confs       => $config->{confs}     || [ ],
+    monit       => $config->{monit}     || { },
   };
+
+  $mysql->{monit}{enabled}  //= 0;
+  $mysql->{monit}{address}  ||= $mysql->{address};
+  $mysql->{monit}{port}     ||= $mysql->{port};
+  $mysql->{monit}{timeout}  ||= 10;
 
   inspect $mysql if Rex::Malta::DEBUG;
 
@@ -28,9 +35,9 @@ task 'setup' => sub {
 
   file "/etc/default/mysql", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
-    content => template( "\@default.mysql" );
+    content => template( "files/default.mysql" );
 
-  file [ "/etc/mysql" ], ensure => 'directory',
+  file "/etc/mysql", ensure => 'directory',
     owner => 'root', group => 'root', mode => 755;
 
   file "/etc/mysql/my.cnf", ensure => 'present',
@@ -60,9 +67,26 @@ task 'setup' => sub {
       command => "mysqladmin -u root password $rootpw";
   }
 
-  file "/etc/logrotate.d/mysql-server", ensure => 'present',
-    owner => 'root', group => 'root', mode => 644,
-    content => template( "files/logrotate.conf.mysql" );
+  if ( is_file "/etc/logrotate.conf" ) {
+    file "/etc/logrotate.d/mysql-server", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/logrotate.conf.mysql" )
+  }
+
+  if ( is_dir "/etc/monit" ) {
+    file "/etc/monit/conf-available/mysql", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/monit.conf.mysql" );
+
+    if ( $mysql->{monit}{enabled} ) {
+      symlink "/etc/monit/conf-available/mysql",
+        "/etc/monit/conf-enabled/mysql";
+    }
+
+    else {
+      unlink "/etc/monit/conf-enabled/mysql";
+    }
+  }
 };
 
 task 'clean' => sub {
@@ -73,9 +97,16 @@ task 'clean' => sub {
 task 'remove' => sub {
   my $mysql = config -force;
 
-  pkg [ qw/mysql-server mysql-client/ ], ensure => 'absent';
+  pkg [
+    qw/mysql-server mysql-client/
+  ], ensure => 'absent';
 
-  file [ "/etc/mysql" ], ensure => 'absent';
+  file [
+    "/etc/default/mysql", "/etc/mysql",
+    "/etc/logrotate.d/mysql-server",
+    "/etc/monit/conf-available/mysql",
+    "/etc/monit/conf-enabled/mysql",
+  ], ensure => 'absent';
 };
 
 task 'status' => sub {
@@ -88,9 +119,3 @@ task 'status' => sub {
 };
 
 1;
-
-__DATA__
-
-@default.mysql
-@end
-

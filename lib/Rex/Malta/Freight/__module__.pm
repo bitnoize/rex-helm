@@ -10,11 +10,11 @@ sub config {
 
   my $freight = {
     active      => $config->{active}    // 0,
-    libdir      => $config->{libdir}    // "/var/lib/freight",
-    cachedir    => $config->{cachedir}  // "/var/www/freight",
-    origin      => $config->{origin}    // "extradebs",
-    label       => $config->{label}     // "Extradebs",
-    gpgkey      => $config->{gpgkey}    // "build\@extradebs",
+    libdir      => $config->{libdir}    || "/var/lib/freight",
+    cachedir    => $config->{cachedir}  || "/var/www/freight",
+    origin      => $config->{origin}    || "extradebs",
+    label       => $config->{label}     || "Extradebs",
+    gpgkey      => $config->{gpgkey}    || "build\@extradebs",
   };
 
   inspect $freight if Rex::Malta::DEBUG;
@@ -50,6 +50,12 @@ task 'remove' => sub {
   my $freight = config -force;
 
   pkg [ qw/freight/ ], ensure => 'absent';
+
+  # Do NOT remove /var/lib/freight
+
+  file [
+    "/etc/freight.conf", "/var/www/freight"
+  ], ensure => 'absent';
 };
 
 task 'status' => sub {

@@ -9,9 +9,12 @@ sub config {
   return unless my $config = Rex::Malta::config( ntp => @_ );
 
   my $ntp = {
-    active      => $config->{active}  // 0,
-    restart     => $config->{restart} // 1,
+    active      => $config->{active}    // 0,
+    restart     => $config->{restart}   // 1,
+    monit       => $config->{monit}     || { },
   };
+
+  $ntp->{monit}{enabled}  //= 0;
 
   inspect $ntp if Rex::Malta::DEBUG;
 
@@ -25,7 +28,7 @@ task 'setup' => sub {
 
   file "/etc/default/ntp", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
-    content => template( "\@default.ntp" );
+    content => template( "files/default.ntp" );
 
   file "/etc/ntp.conf", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
@@ -33,6 +36,21 @@ task 'setup' => sub {
 
   service 'ntp', ensure => 'started';
   service 'ntp' => "restart" if $ntp->{restart};
+
+  if ( is_dir "/etc/monit" ) {
+    file "/etc/monit/conf-available/ntp", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/monit.conf.ntp" );
+
+    if ( $ntp->{monit}{enabled} ) {
+      symlink "/etc/monit/conf-available/ntp",
+        "/etc/monit/conf-enabled/ntp";
+    }
+
+    else {
+      unlink "/etc/monit/conf-enabled/ntp";
+    }
+  }
 };
 
 task 'clean' => sub {
@@ -45,6 +63,12 @@ task 'remove' => sub {
   my $ntp = config -force;
 
   pkg [ qw/ntp/ ], ensure => 'absent';
+
+  file [
+    "/etc/default/ntp", "/etc/ntp.conf",
+    "/etc/monit/conf-available/ntp",
+    "/etc/monit/conf-enabled/ntp",
+  ], ensure => 'absent';
 };
 
 task 'status' => sub {
@@ -64,10 +88,3 @@ task 'sync' => sub {
 };
 
 1;
-
-__DATA__
-
-@default.ntp
-NTPD_OPTS="-g"
-@end
-

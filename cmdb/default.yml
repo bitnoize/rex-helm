@@ -13,7 +13,7 @@ system:
 # aptproxy:     http://127.0.0.1:9080
   backports:    1
 # extradebs:    0
-# extralink:    http://debs:secret@debs.test.net
+# extralink:    ~
 # packages:     [ ]
 # swapfile:     /swap
 # swapdize:     1024k
@@ -71,6 +71,10 @@ dnsmasq:
 # port:         53
 # upstream:     [ 8.8.8.8, 8.8.4.4 ]
   confs:        [ upstream ]
+  monit:
+    enabled:      1
+#   address:      127.0.0.1
+#   port:         53
 
 unbound:
   active:       0
@@ -79,6 +83,7 @@ unbound:
 # address:      [ 127.0.0.1 ]
 # port:         53
 # allowed:      [ 127.0.0.1/8 ]
+# monit:        0
   confs:        [ qname-minimisation, root-auto-trust-anchor-file ]
 
 nginx:
@@ -87,6 +92,7 @@ nginx:
 # snippets:     [ ]
 # secrets:      [ ]
 # restart:      1
+# monit:        0
 # sites:
 #   'default':
 #     enabled:      1
@@ -98,20 +104,26 @@ mysql:
 # address:      127.0.0.1
 # port:         3306
 # rootpw:       'secret'
+# monit:        0
 # confs:        [ ]
 
 redis:
   active:       0
+# address:      [ 127.0.0.1 ]
+# port:         6379
 # restart:      1
+# monit:        0
 
 postfix:
   active:       0
 # restart:      1
+# monit:        0
 
 rblcheck:
   active:       0
 # hosts:        [ 127.0.0.1 ]
 # lists:        [ zen.spamhaus.org ]
+# monit:        0
 
 monit:
   active:       1
@@ -146,12 +158,6 @@ monit:
       enabled:      0
       port:         5281
 
-    'dnsmasq':
-      enabled:      0
-#     address:      127.0.0.1
-#     port:         53
-#     timeout:      30
-
     'unbound':
       enabled:      0
 #     address:      127.0.0.1
@@ -179,7 +185,7 @@ collectd:
 # restart:      1
 # server:       0
 # interval:     60
-# remote:       graph.test.net
+# remote:       ~
 # address:      0.0.0.0
 # port:         25826
 # interface:    eth0

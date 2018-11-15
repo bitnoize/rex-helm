@@ -5,9 +5,10 @@ check process redis
     start program = "/usr/sbin/service redis-server start"
     stop  program = "/usr/sbin/service redis-server stop"
     if failed
-        host <%= $conf->{address} ||= "127.0.0.1" %> port <%= $conf->{port} ||= 6379 %>
+        host <%= $redis->{monit}{address} %>
+        port <%= $redis->{monit}{port} %>
         use type tcp protocol redis
-        with timeout 10 seconds for 1 cycle
+        with timeout <%= $redis->{monit}{timeout} %> seconds for 1 cycle
     then alert
     if 5 restarts within 5 cycles then timeout
     depend redis_bin
@@ -23,5 +24,5 @@ check file redis_bin
 check file redis_dump
     with path /var/lib/redis/dump.rdb
     group redis
-    if size > <%= $conf->{dumpsize} ||= 100 %> MB then alert
+    if size > <%= $redis->{dumpsize} ||= 100 %> MB then alert
 

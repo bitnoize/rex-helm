@@ -1,0 +1,6 @@
+# Set the ulimit variable if you need defaults to change
+#ULIMIT="-n 4096"
+
+# Define the stop schedule for nginx
+#STOP_SCHEDULE="QUIT/5/TERM/5/KILL/5"
+

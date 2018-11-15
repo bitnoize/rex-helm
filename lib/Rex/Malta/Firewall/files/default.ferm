@@ -1,0 +1,12 @@
+# Enable ferm init script
+ENABLED="yes"
+
+# Use iptables-restore for init
+FAST="yes"
+
+# Cache output of ferm --lines
+CACHE="yes"
+
+# Additional paramaters
+OPTIONS=""
+

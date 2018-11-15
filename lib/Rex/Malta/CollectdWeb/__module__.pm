@@ -14,8 +14,8 @@ sub config {
 
   my $collectdweb = {
     active      => $config->{active}  // 0,
-    distrib     => $config->{distrib} // DISTRIB,
-    workdir     => $config->{workdir} // "/var/www/collectd-web",
+    distrib     => $config->{distrib} || DISTRIB,
+    workdir     => $config->{workdir} || "/var/www/collectd-web",
   };
 
   inspect $collectdweb if Rex::Malta::DEBUG;

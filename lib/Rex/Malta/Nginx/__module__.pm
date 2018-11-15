@@ -8,14 +8,22 @@ use Rex -feature => [ '1.4' ];
 sub config {
   return unless my $config = Rex::Malta::config( nginx => @_ );
 
+  my @default_confs = qw/upstream/;
+
   my $nginx = {
     active      => $config->{active}    // 0,
     restart     => $config->{restart}   // 1,
-    confs       => $config->{confs}     // [ ],
-    snippets    => $config->{snippets}  // [ ],
-    secrets     => $config->{secrets}   // [ ],
-    sites       => $config->{sites}     // { },
+    confs       => $config->{confs}     || [ ],
+    snippets    => $config->{snippets}  || [ ],
+    secrets     => $config->{secrets}   || [ ],
+    sites       => $config->{sites}     || { },
+    monit       => $config->{monit}     || { },
   };
+
+  $nginx->{monit}{enabled}  //= 0;
+  $nginx->{monit}{address}  ||= "127.0.0.1";
+  $nginx->{monit}{port}     ||= 80;
+  $nginx->{monit}{timeout}  ||= 10;
 
   inspect $nginx if Rex::Malta::DEBUG;
 
@@ -29,7 +37,7 @@ task 'setup' => sub {
 
   file "/etc/default/nginx", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
-    content => template( "\@default.nginx" );
+    content => template( "files/default.nginx" );
 
   file [ "/etc/nginx" ], ensure => 'directory',
     owner => 'root', group => 'root', mode => 755;
@@ -75,11 +83,11 @@ task 'setup' => sub {
     my $site = $sites->{ $name };
 
     $site->{enabled}  //= 0;
-    $site->{domain}   //= [ "_" ];
-    $site->{address}  //= [ "127.0.0.1" ];
-    $site->{port}     //= 80;
-    $site->{sslport}  //= 443;
-    $site->{cert}     //= '';
+    $site->{domain}   ||= [ "_" ];
+    $site->{address}  ||= [ "127.0.0.1" ];
+    $site->{port}     ||= 80;
+    $site->{sslport}  ||= 443;
+    $site->{cert}     ||= "";
 
     set site => $site;
 
@@ -114,9 +122,26 @@ task 'setup' => sub {
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/nginx.index.html" );
 
-  file "/etc/logrotate.d/nginx", ensure => 'present',
-    owner => 'root', group => 'root', mode => 644,
-    content => template( "files/logrotate.conf.nginx" );
+  if ( is_file "/etc/logrotate.conf" ) {
+    file "/etc/logrotate.d/nginx", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/logrotate.conf.nginx" );
+  }
+
+  if ( is_dir "/etc/monit" ) {
+    file "/etc/monit/conf-available/nginx", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/monit.conf.nginx" );
+
+    if ( $nginx->{monit}{enabled} ) {
+      symlink "/etc/monit/conf-available/nginx",
+        "/etc/monit/conf-enabled/nginx";
+    }
+
+    else {
+      unlink "/etc/monit/conf-enabled/nginx";
+    }
+  }
 };
 
 task 'clean' => sub {
@@ -135,11 +160,16 @@ task 'clean' => sub {
 task 'remove' => sub {
   my $nginx = config -force;
 
-  pkg [ qw/nginx/ ], ensure => 'absent';
+  pkg [
+    qw/nginx nginx-full nginx-light nginx-extras/
+  ], ensure => 'absent';
 
   file [
-    "/etc/logrotate.d/nginx",
+    "/etc/default/nginx", "/etc/nginx",
     "/var/cache/nginx", "/var/log/nginx",
+    "/etc/logrotate.d/nginx",
+    "/etc/monit/conf-available/nginx",
+    "/etc/monit/conf-enabled/nginx",
   ], ensure => 'absent';
 };
 
@@ -153,14 +183,3 @@ task 'status' => sub {
 };
 
 1;
-
-__DATA__
-
-@default.nginx
-# Set the ulimit variable if you need defaults to change
-#ULIMIT="-n 4096"
-
-# Define the stop schedule for nginx
-#STOP_SCHEDULE="QUIT/5/TERM/5/KILL/5"
-@end
-

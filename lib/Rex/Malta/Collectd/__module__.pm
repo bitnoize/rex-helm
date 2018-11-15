@@ -12,14 +12,14 @@ sub config {
     active      => $config->{active}    // 0,
     restart     => $config->{restart}   // 1,
     server      => $config->{server}    // 0,
-    interval    => $config->{interval}  // 60,
-    remote      => $config->{remote}    // "graph.test.net",
-    address     => $config->{address}   // "0.0.0.0",
-    port        => $config->{port}      // 25826,
-    interface   => $config->{interface} // "eth0",
-    username    => $config->{username}  // "stats",
-    password    => $config->{password}  // "secret",
-    confs       => $config->{confs}     // { },
+    interval    => $config->{interval}  || 60,
+    remote      => $config->{remote}    || undef,
+    address     => $config->{address}   || "0.0.0.0",
+    port        => $config->{port}      || 25826,
+    interface   => $config->{interface} || "eth0",
+    username    => $config->{username}  || "stats",
+    password    => $config->{password}  || "secret",
+    confs       => $config->{confs}     || { },
   };
 
   inspect $collectd if Rex::Malta::DEBUG;
@@ -34,9 +34,9 @@ task 'setup' => sub {
 
   file "/etc/default/collectd", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
-    content => template( "\@default.collectd" );
+    content => template( "files/default.collectd" );
 
-  file [ "/etc/collectd" ], ensure => 'directory',
+  file "/etc/collectd", ensure => 'directory',
     owner => 'root', group => 'root', mode => 755;
 
   file "/etc/collectd/collectd.conf", ensure => 'present',
@@ -96,29 +96,25 @@ task 'remove' => sub {
 
   pkg [ qw/collectd collectd-core/ ], ensure => 'absent';
 
-  file [ "/etc/collectd", "/var/lib/collectd" ], ensure => 'absent';
+  file [
+    "/etc/default/collectd", "/etc/collectd", "/var/lib/collectd",
+  ], ensure => 'absent';
 };
 
 task 'status' => sub {
   my $collectd = config -force;
 
+  run 'collectd_status', timeout => 10,
+    command => "/usr/sbin/service collectd status";
+
+  say "Collectd service status:\n", last_command_output;
 };
 
 1;
 
 __DATA__
 
-@default.collectd
-# Start collectd on boot
-DISABLE=0
-
-# Monitor collectd using collectdmon
-USE_COLLECTDMON=1
-
-# Seconds to wait for collectd to shut down
-MAXWAIT=30
-@end
-
 @kill_collectd
 /usr/bin/killall -9 collectd
 @end
+

@@ -8,14 +8,17 @@ use Rex -feature => [ '1.4' ];
 sub config {
   return unless my $config = Rex::Malta::config( unbound => @_ );
 
+  my @default_confs = qw/qname-minimisation root-auto-trust-anchor-file/;
+
   my $unbound = {
     active      => $config->{active}    // 0,
     restart     => $config->{restart}   // 1,
     resolver    => $config->{resolver}  // 0,
-    address     => $config->{address}   // [ "127.0.0.1" ],
-    port        => $config->{port}      // 53,
-    allowed     => $config->{allowed}   // [ qw{127.0.0.0/8} ],
-    confs       => $config->{confs}     // [ ],
+    address     => $config->{address}   || [ "127.0.0.1" ],
+    port        => $config->{port}      || 53,
+    allowed     => $config->{allowed}   || [ qw{127.0.0.0/8} ],
+    confs       => $config->{confs}     || [ @default_confs ],
+    monit       => $config->{monit}     || { },
   };
 
   my @nameserver = map {
@@ -24,6 +27,11 @@ sub config {
   } @{ $unbound->{address} };
 
   $unbound->{nameserver} = [ @nameserver ];
+
+  $unbound->{monit}{enabled}  //= 0;
+  $unbound->{monit}{address}  ||= $unbound->{address}[0];
+  $unbound->{monit}{port}     ||= $unbound->{port};
+  $unbound->{monit}{timeout}  ||= 10;
 
   inspect $unbound if Rex::Malta::DEBUG;
 
@@ -37,7 +45,7 @@ task 'setup' => sub {
 
   file "/etc/default/unbound", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
-    content => template( "\@default.unbound" );
+    content => template( "files/default.unbound" );
 
   file "/etc/unbound/unbound.conf", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
@@ -57,7 +65,25 @@ task 'setup' => sub {
   if ( $unbound->{resolver} ) {
     file "/etc/resolv.conf", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
-      content => template( "\@resolv.conf.unbound" );
+      content => template( "files/resolv.conf.unbound" ),
+      on_change => sub {
+        Rex::Logger::info( "Unbound set as main resolver" => 'info' )
+      };
+  }
+
+  if ( is_dir "/etc/monit" ) {
+    file "/etc/monit/conf-available/unbound", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/monit.conf.unbound" );
+
+    if ( $unbound->{monit}{enabled} ) {
+      symlink "/etc/monit/conf-available/unbound",
+        "/etc/monit/conf-enabled/unbound";
+    }
+
+    else {
+      unlink "/etc/monit/conf-enabled/unbound";
+    }
   }
 };
 
@@ -73,7 +99,8 @@ task 'remove' => sub {
   pkg [ qw/unbound/ ], ensure => 'absent';
 
   file [
-    "/etc/unbound", "/var/lib/unbound"
+    "/etc/default/unbound", "/etc/unbound", "/var/lib/unbound",
+    "/etc/monit/conf-available/unbound", "/etc/monit/conf-enabled/unbound",
   ], ensure => 'absent';
 };
 
@@ -87,29 +114,3 @@ task 'status' => sub {
 };
 
 1;
-
-__DATA__
-
-@default.unbound
-UNBOUND_ENABLE="true"
-
-# Whether to automatically update the root trust anchor file
-ROOT_TRUST_ANCHOR_UPDATE="true"
-
-# File in which to store the root trust anchor
-ROOT_TRUST_ANCHOR_FILE="/var/lib/unbound/root.key"
-
-# Provide unbound's ip to resolvconf
-RESOLVCONF="false"
-
-# Configure as forwarders
-RESOLVCONF_FORWARDERS="false"
-
-ulimit -Hn 10240
-ulimit -Sn 10240
-@end
-
-@resolv.conf.unbound
-<%= join "\n", map { "nameserver $_" } @{ $unbound->{nameserver} } %>
-@end
-

@@ -9,9 +9,12 @@ sub config {
   return unless my $config = Rex::Malta::config( postfix => @_ );
 
   my $postfix = {
-    active      => $config->{active}  // 0,
-    restart     => $config->{restart} // 1,
+    active      => $config->{active}    // 0,
+    restart     => $config->{restart}   // 1,
+    monit       => $config->{monit}     || { },
   };
+
+  $postfix->{monit}{enabled}  //= 0;
 
   inspect $postfix if Rex::Malta::DEBUG;
 
@@ -24,9 +27,12 @@ task 'setup' => sub {
   pkg [ qw/postfix/ ], ensure => 'present';
 
   # There no any configuration yet
+  Rex::Logger::info( "There is no Postfix configuration yet" => 'warn' );
 
   service 'postfix', ensure => "started";
   service 'postfix' => "restart" if $postfix->{restart};
+
+  # TODO monit configuration
 };
 
 task 'clean' => sub {

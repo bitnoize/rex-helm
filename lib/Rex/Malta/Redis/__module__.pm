@@ -9,11 +9,17 @@ sub config {
   return unless my $config = Rex::Malta::config( redis => @_ );
 
   my $redis = {
-    active      => $config->{active}  // 0,
-    restart     => $config->{restart} // 1,
-    address     => $config->{address} // "127.0.0.1",
-    port        => $config->{port}    // 6379,
+    active      => $config->{active}    // 0,
+    restart     => $config->{restart}   // 1,
+    address     => $config->{address}   || [ "127.0.0.1" ],
+    port        => $config->{port}      || 6379,
+    monit       => $config->{monit}     || { },
   };
+
+  $redis->{monit}{enabled}  //= 0;
+  $redis->{monit}{address}  ||= $redis->{address}[0];
+  $redis->{monit}{port}     ||= $redis->{port};
+  $redis->{monit}{timeout}  ||= 10;
 
   inspect $redis if Rex::Malta::DEBUG;
 
@@ -27,7 +33,7 @@ task 'setup' => sub {
 
   file "/etc/default/redis-server", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
-    content => template( "\@default.redis" );
+    content => template( "files/default.redis" );
 
   file [ "/etc/redis" ], ensure => 'directory',
     owner => 'root', group => 'root', mode => 755;
@@ -39,9 +45,26 @@ task 'setup' => sub {
   service 'redis', ensure => "started";
   service 'redis' => "restart" if $redis->{restart};
 
-  file "/etc/logrotate.d/redis-server", ensure => 'present',
-    owner => 'root', group => 'root', mode => 644,
-    content => template( "files/logrotate.conf.redis" );
+  if ( is_file "/etc/logrotate.conf" ) {
+    file "/etc/logrotate.d/redis-server", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/logrotate.conf.redis" );
+  }
+
+  if ( is_dir "/etc/monit" ) {
+    file "/etc/monit/conf-available/redis", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/monit.conf.redis" );
+
+    if ( $redis->{monit}{enabled} ) {
+      symlink "/etc/monit/conf-available/redis",
+        "/etc/monit/conf-enabled/redis";
+    }
+
+    else {
+      unlink "/etc/monit/conf-enabled/redis";
+    }
+  }
 };
 
 task 'clean' => sub {
@@ -52,9 +75,17 @@ task 'clean' => sub {
 task 'remove' => sub {
   my $redis = config -force;
 
-  pkg [ qw/redis-server redis-tools/ ], ensure => 'absent';
+  pkg [
+    qw/redis-server redis-tools/
+  ], ensure => 'absent';
 
-  file [ "/etc/redis", "/var/lib/redis" ], ensure => 'absent';
+  file [
+    "/etc/default/redis-server", "/etc/redis",
+    "/var/lib/redis",
+    "/etc/logrotate.d/redis-server",
+    "/etc/monit/conf-available/redis",
+    "/etc/monit/conf-enabled/redis",
+  ], ensure => 'absent';
 };
 
 task 'status' => sub {
@@ -67,11 +98,3 @@ task 'status' => sub {
 };
 
 1;
-
-__DATA__
-
-@default.redis
-# Call ulimit -n with this argument prior to invoking Redis itself
-ULIMIT=65536
-@end
-

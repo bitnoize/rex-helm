@@ -10,8 +10,8 @@ sub config {
 
   my $gitweb = {
     active      => $config->{active}      // 0,
-    projectroot => $config->{projectroot} // "/var/lib/git",
-    site_name   => $config->{site_name}   // "Gitweb",
+    projectroot => $config->{projectroot} || "/var/lib/git",
+    site_name   => $config->{site_name}   || "Gitweb",
   };
 
   inspect $gitweb if Rex::Malta::DEBUG;
@@ -42,6 +42,10 @@ task 'remove' => sub {
   my $gitweb = config -force;
 
   pkg [ qw/gitweb highlight/ ], ensure => 'absent';
+
+  # Do NOT remove projectroot directory
+
+  file [ "/etc/gitweb.conf", ], ensure => 'absent';
 };
 
 task 'status' => sub {

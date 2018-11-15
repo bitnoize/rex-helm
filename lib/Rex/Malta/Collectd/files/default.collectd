@@ -1,0 +1,9 @@
+# Start collectd on boot
+DISABLE=0
+
+# Monitor collectd using collectdmon
+USE_COLLECTDMON=1
+
+# Seconds to wait for collectd to shut down
+MAXWAIT=30
+

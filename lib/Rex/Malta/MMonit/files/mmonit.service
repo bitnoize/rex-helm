@@ -1,0 +1,15 @@
+[Unit]
+Description=Easy, proactive monitoring of Unix systems
+After=network.target
+
+[Service]
+User=mmonit
+Group=mmonit
+WorkingDirectory=<%= $mmonit->{workdir} %>
+ExecStart=<%= $mmonit->{workdir} %>/bin/mmonit -i -p /run/mmonit
+ExecStop=<%= $mmonit->{workdir} %>/bin/mmonit -p /run/mmonit stop
+PIDFile=/run/mmonit/mmonit.pid
+
+[Install]
+WantedBy=multi-user.target
+

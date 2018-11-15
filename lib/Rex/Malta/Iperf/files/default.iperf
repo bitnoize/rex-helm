@@ -1,0 +1,4 @@
+ADDRESS="<%= $iperf->{address} %>"
+PORT="<%= $iperf->{port} %>"
+OPTIONS=""
+

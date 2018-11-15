@@ -1,0 +1,9 @@
+# Start libvirtd to handle qemu/kvm
+start_libvirtd="yes"
+
+# Options passed to libvirtd
+#libvirtd_opts=""
+
+# Pass in location of kerberos keytab
+#export KRB5_KTNAME=/etc/libvirt/libvirt.keytab
+

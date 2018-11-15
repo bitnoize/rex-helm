@@ -9,11 +9,11 @@ sub config {
   return unless my $config = Rex::Malta::config( rsync => @_ );
 
   my $rsync = {
-    active      => $config->{active}  // 0,
-    restart     => $config->{restart} // 1,
-    address     => $config->{address} // "127.0.0.1",
-    port        => $config->{port}    // 873,
-    storage     => $config->{storage} // "/var/www/stuff",
+    active      => $config->{active}    // 0,
+    restart     => $config->{restart}   // 1,
+    address     => $config->{address}   || "127.0.0.1",
+    port        => $config->{port}      || 873,
+    storage     => $config->{storage}   || "/var/www/stuff",
   };
 
   inspect $rsync if Rex::Malta::DEBUG;
@@ -28,7 +28,7 @@ task 'setup' => sub {
 
   file "/etc/default/rsync", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
-    content => template( "\@default.rsync" );
+    content => template( "files/default.rsync" );
 
   file "/etc/rsyncd.conf", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
@@ -51,7 +51,9 @@ task 'remove' => sub {
 
   pkg [ qw/rsync/ ], ensure => 'absent';
 
-  file [ "/etc/rsyncd.conf" ], ensure => 'absent';
+  file [
+    "/etc/default/rsync", "/etc/rsyncd.conf"
+  ], ensure => 'absent';
 };
 
 task 'status' => sub {
@@ -60,23 +62,3 @@ task 'status' => sub {
 };
 
 1;
-
-__DATA__
-
-@default.rsync
-# start rsync in daemon mode
-RSYNC_ENABLE="true"
-
-# Configuration file for rsync
-#RSYNC_CONFIG_FILE="/etc/rsyncd.conf"
-
-# Extra options to give rsync
-#RSYNC_OPTS=""
-
-# Run rsyncd at a nice level
-#RSYNC_NICE=''
-
-# Run rsyncd with ionice
-#RSYNC_IONICE='-c3'
-@end
-

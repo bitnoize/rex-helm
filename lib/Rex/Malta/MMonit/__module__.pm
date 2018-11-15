@@ -15,14 +15,14 @@ sub config {
   my $mmonit = {
     active      => $config->{active}    // 0,
     restart     => $config->{restart}   // 1,
-    platform    => $config->{platform}  // "linux-x64",
-    version     => $config->{version}   // "3.7.1",
-    workdir     => $config->{workdir}   // "/opt/mmonit",
-    address     => $config->{address}   // "0.0.0.0",
-    port        => $config->{port}      // "3127",
-    schema      => $config->{schema}    // "mysql://monit:monit\@127.0.0.1/mmonit",
-    owner       => $config->{owner}     // "Unknown",
-    license     => $config->{license}   // "none",
+    platform    => $config->{platform}  || "linux-x64",
+    version     => $config->{version}   || "3.7.1",
+    workdir     => $config->{workdir}   || "/opt/mmonit",
+    address     => $config->{address}   || "0.0.0.0",
+    port        => $config->{port}      || "3127",
+    schema      => $config->{schema}    || "mysql://monit:monit\@127.0.0.1/mmonit",
+    owner       => $config->{owner}     || "Unknown",
+    license     => $config->{license}   || "none",
   };
 
   $mmonit->{distrib} = sprintf DISTRIB, @$mmonit{ qw/version platform/ };
@@ -61,18 +61,18 @@ task 'setup' => sub {
 
   file "/etc/security/limits.d/mmonit.conf", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
-    content => template( "\@limits.mmonit" );
+    content => template( "files/limits.mmonit" );
 
   file "/etc/tmpfiles.d/mmonit.conf", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
-    content => template( "\@tmpfiles.mmonit" );
+    content => template( "files/tmpfiles.mmonit" );
 
   run 'systemd_tmpfiles', timeout => 10,
     command => "systemd-tmpfiles --create /etc/tmpfiles.d/mmonit.conf";
 
   file "/etc/systemd/system/mmonit.service", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
-    content => template( "\@mmonit.service" ),
+    content => template( "files/mmonit.service" ),
     on_change => sub {
       run 'systemd_restart', timeout => 10,
         command => "systemctl daemon-reload";
@@ -158,31 +158,7 @@ echo "Done MMonit install"
 echo "$( date +%s )" > "/root/mmonit.state"
 @end
 
-@limits.mmonit
-mmonit hard core 100000
-@end
-
-@tmpfiles.mmonit
-d /run/mmonit 755 mmonit mmonit - -
-@end
-
-@mmonit.service
-[Unit]
-Description=Easy, proactive monitoring of Unix systems
-After=network.target
-
-[Service]
-User=mmonit
-Group=mmonit
-WorkingDirectory=<%= $mmonit->{workdir} %>
-ExecStart=<%= $mmonit->{workdir} %>/bin/mmonit -i -p /run/mmonit
-ExecStop=<%= $mmonit->{workdir} %>/bin/mmonit -p /run/mmonit stop
-PIDFile=/run/mmonit/mmonit.pid
-
-[Install]
-WantedBy=multi-user.target
-@end
-
 @kill_mmonit
 /usr/bin/killall -9 --user mmonit
 @end
+

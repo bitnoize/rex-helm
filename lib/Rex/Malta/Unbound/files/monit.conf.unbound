@@ -5,9 +5,10 @@ check process unbound
     start = "/usr/sbin/service unbound start"
     stop = "/usr/sbin/service unbound stop"
     if failed
-        host <%= $conf->{address} ||= "127.0.0.1" %> port <%= $conf->{port} ||= 53 %>
+        host <%= $unbound->{monit}{address} %>
+        port <%= $unbound->{monit}{port} %>
         use type udp protocol dns
-        with timeout 10 seconds for 1 cycle
+        with timeout <%= $unbound->{monit}{timeout} %> seconds for 1 cycle
     then alert
     if 5 restarts within 5 cycles then timeout
     depends on unbound_bin

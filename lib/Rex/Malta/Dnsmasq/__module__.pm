@@ -12,11 +12,12 @@ sub config {
     active      => $config->{active}    // 0,
     restart     => $config->{restart}   // 1,
     resolver    => $config->{resolver}  // 1,
-    address     => $config->{address}   // [ "127.0.0.1" ],
-    interface   => $config->{interface} // [ "lo" ],
-    port        => $config->{port}      // 53,
-    upstream    => $config->{upstream}  // [ qw/8.8.8.8 8.8.4.4/ ],
-    confs       => $config->{confs}     // [ ],
+    address     => $config->{address}   || [ "127.0.0.1" ],
+    interface   => $config->{interface} || [ "lo" ],
+    port        => $config->{port}      || 53,
+    upstream    => $config->{upstream}  || [ qw/8.8.8.8 8.8.4.4/ ],
+    confs       => $config->{confs}     || [ ],
+    monit       => $config->{monit}     || { },
   };
 
   my @nameserver = map {
@@ -30,6 +31,11 @@ sub config {
     map { join '#', $_, $dnsmasq->{port} } @{ $dnsmasq->{address} }
   ];
 
+  $dnsmasq->{monit}{enabled}  //= 0;
+  $dnsmasq->{monit}{address}  ||= $dnsmasq->{address}[0];
+  $dnsmasq->{monit}{port}     ||= $dnsmasq->{port};
+  $dnsmasq->{monit}{timeout}  ||= 10;
+
   inspect $dnsmasq if Rex::Malta::DEBUG;
 
   set 'dnsmasq' => $dnsmasq;
@@ -42,7 +48,7 @@ task 'setup' => sub {
 
   file "/etc/default/dnsmasq", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
-    content => template( "\@default.dnsmasq" );
+    content => template( "files/default.dnsmasq" );
 
   file "/etc/dnsmasq.conf", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
@@ -62,7 +68,22 @@ task 'setup' => sub {
   if ( $dnsmasq->{resolver} ) {
     file "/etc/resolv.conf", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
-      content => template( "\@resolv.conf.dnsmasq" );
+      content => template( "files/resolv.conf.dnsmasq" );
+  }
+
+  if ( is_dir "/etc/monit" ) {
+    file "/etc/monit/conf-available/dnsmasq", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/monit.conf.dnsmasq" );
+
+    if ( $dnsmasq->{monit}{enabled} ) {
+      symlink "/etc/monit/conf-available/dnsmasq",
+        "/etc/monit/conf-enabled/dnsmasq";
+    }
+
+    else {
+      unlink "/etc/monit/conf-enabled/dnsmasq";
+    }
   }
 };
 
@@ -77,7 +98,8 @@ task 'remove' => sub {
   pkg [ qw/dnsmasq/ ], ensure => "absent";
 
   file [
-    "/etc/dnsmasq.conf", "/etc/dnsmasq.d",
+    "/etc/default/dnsmasq", "/etc/dnsmasq.conf", "/etc/dnsmasq.d",
+    "/etc/monit/conf-available/dnsmasq", "/etc/monit/conf-enabled/dnsmasq",
   ], ensure => 'absent';
 };
 
@@ -91,21 +113,3 @@ task 'status' => sub {
 };
 
 1;
-
-__DATA__
-
-@default.dnsmasq
-#DOMAIN_SUFFIX="$(dnsdomainname)"
-#DNSMASQ_OPTS="--conf-file=/etc/dnsmasq.alt"
-
-# Whether or not to run the dnsmasq daemon
-ENABLED=1
-
-# Search this drop directory for configuration options
-CONFIG_DIR=/etc/dnsmasq.d,.dpkg-dist,.dpkg-old,.dpkg-new
-@end
-
-@resolv.conf.dnsmasq
-<%= join "\n", map { "nameserver $_" } @{ $dnsmasq->{dnsmasq} } %>
-@end
-

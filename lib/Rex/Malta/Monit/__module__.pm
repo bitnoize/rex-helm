@@ -11,12 +11,11 @@ sub config {
   my $monit = {
     active      => $config->{active}  // 0,
     restart     => $config->{restart} // 1,
-    address     => $config->{address} // "0.0.0.0",
-    port        => $config->{port}    // 2812,
-    auth        => $config->{auth}    // "monit:secret",
-    mmonit      => $config->{mmonit}  //
-                      "https://monit:secret\@monit.test.net:3127/collector",
-    confs       => $config->{confs}   // { },
+    address     => $config->{address} || "0.0.0.0",
+    port        => $config->{port}    || 2812,
+    auth        => $config->{auth}    || "monit:secret",
+    mmonit      => $config->{mmonit}  || "",
+    confs       => $config->{confs}   || { },
   };
 
   $monit->{cert} = "/etc/monit/monit.pem";
@@ -33,7 +32,7 @@ task 'setup' => sub {
 
   file "/etc/default/monit", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
-    content => template( "\@default.monit" );
+    content => template( "files/default.monit" );
 
   # FIXME find better solution to start monit before network
   if ( is_file "/etc/init.d/monit" ) {
@@ -62,7 +61,7 @@ task 'setup' => sub {
   for my $name ( keys %$confs ) {
     my $conf = $confs->{ $name };
 
-    $conf->{enabled} ||= 0;
+    $conf->{enabled} //= 0;
 
     set conf => $conf;
 
@@ -83,9 +82,11 @@ task 'setup' => sub {
   service 'monit', ensure => "started";
   service 'monit' => "restart" if $monit->{restart};
 
-  file "/etc/logrotate.d/monit", ensure => 'present',
-    owner => 'root', group => 'root', mode => 644,
-    content => template( "files/logrotate.conf.monit" );
+  if ( is_file "/etc/logrotate.conf" ) {
+    file "/etc/logrotate.d/monit", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/logrotate.conf.monit" );
+  }
 };
 
 task 'clean' => sub {
@@ -117,7 +118,10 @@ task 'remove' => sub {
 
   pkg [ qw/monit/ ], ensure => 'absent';
 
-  file [ "/etc/monit", "/var/lib/monit" ], ensure => 'absent';
+  file [
+    "/etc/default/monit", "/etc/monit", "/var/lib/monit",
+    "/etc/logrotate.d/monit",
+  ], ensure => 'absent';
 };
 
 task 'status' => sub {
@@ -130,14 +134,3 @@ task 'status' => sub {
 };
 
 1;
-
-__DATA__
-
-@default.monit
-# Set START to yes to start the monit
-START="yes"
-
-# Options to pass to monit
-#MONIT_OPTS=""
-@end
-

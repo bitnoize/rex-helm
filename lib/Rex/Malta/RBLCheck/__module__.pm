@@ -9,10 +9,14 @@ sub config {
   return unless my $config = Rex::Malta::config( rblcheck => @_ );
 
   my $rblcheck = {
-    active      => $config->{active}  // 0,
-    hosts       => $config->{hosts}   // [ qw/127.0.0.1/ ],
-    lists       => $config->{lists}   // [ qw/zen.spamhaus.org/ ],
+    active      => $config->{active}    // 0,
+    hosts       => $config->{hosts}     || [ qw/127.0.0.1/ ],
+    lists       => $config->{lists}     || [ qw/zen.spamhaus.org/ ],
+    monit       => $config->{monit}     || { },
   };
+
+  $openssh->{monit}{enabled}  //= 0;
+  $openssh->{monit}{timeout}  ||= 60;
 
   inspect $rblcheck if Rex::Malta::DEBUG;
 
@@ -37,6 +41,21 @@ task 'setup' => sub {
   file "/etc/rblcheck/lists.conf", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/rblcheck.conf.lists" );
+
+  if ( is_dir "/etc/monit" ) {
+    file "/etc/monit/conf-available/rblcheck", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/monit.conf.rblcheck" );
+
+    if ( $rblcheck->{monit}{enabled} ) {
+      symlink "/etc/monit/conf-available/rblcheck",
+        "/etc/monit/conf-enabled/rblcheck";
+    }
+
+    else {
+      unlink "/etc/monit/conf-enabled/rblcheck";
+    }
+  }
 };
 
 task 'clean' => sub {
@@ -57,6 +76,12 @@ task 'remove' => sub {
   my $rblcheck = config -force;
 
   pkg [ qw/rblcheck-ng/ ], ensure => "absent";
+
+  file [
+    "/etc/rblcheck",
+    "/etc/monit/conf-available/rblcheck",
+    "/etc/monit/conf-enabled/rblcheck",
+  ], ensure => 'absent';
 };
 
 task 'status' => sub {
