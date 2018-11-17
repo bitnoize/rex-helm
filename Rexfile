@@ -44,9 +44,10 @@ environment 'test' => sub {
 set 'modules' => [
   'System',     # Basic system stuff
   'Network',    # Network configuration
+  'Firewall',   # Iptables rules
   'Shaper',     # Traffic control
   'Syslog',     # Syslog facility
-  'Firewall',   # Iptables rules
+  'Cron',       # Cron scheduler
   'OpenSSH',    # OpenSSH service
   'NTP',        # Network Time Protocol
   'Iperf',      # Network bandwidth test
@@ -59,6 +60,7 @@ set 'modules' => [
   'Redis',      # Redis in-memory storage
   'Postfix',    # Postfix mailer
 
+  'RBLCheck',   # RBLCheck script
   'Freight',    # Deb repositories for busy people
   'Rsync',      # Remote sync
   'Monit',      # Service monitoring
@@ -66,8 +68,6 @@ set 'modules' => [
   'MMonit',     # Monit combiner
   'CollectdWeb',# Collectd combiner
   'Gitweb',     # Gitweb service
-
-  'RBLCheck',   # RBLCheck script
 ];
 
 require Rex::Malta;

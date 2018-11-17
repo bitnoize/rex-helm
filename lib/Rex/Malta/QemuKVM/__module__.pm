@@ -37,14 +37,6 @@ task 'setup' => sub {
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/default.libvirt-guests" );
 
-# file "/etc/sysctl.d/10-forward.conf", ensure => 'present',
-#   owner => 'root', group => 'root', mode => 644,
-#   content => template( "files/sysctl.conf.10-forward" ),
-#   on_change => sub {
-#     run 'sysctl_reload', timeout => 10,
-#       command => "sysctl -p /etc/sysctl.d/10-forward.conf";
-#   };
-
   service 'libvirtd', ensure => 'started';
   service 'libvirt-guests', ensure => 'started';
   service 'libvirtd' => "restart" if $qemukvm->{restart};

@@ -1,1 +1,0 @@
-<%= join "\n", map { "server=$_" } @{ $dnsmasq->{upstream} } %>

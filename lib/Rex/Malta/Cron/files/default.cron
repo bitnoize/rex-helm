@@ -1,0 +1,6 @@
+# Whether to read the system's default environment files
+READ_ENV="yes"
+
+# Extra options for cron
+#EXTRA_OPTS=""
+

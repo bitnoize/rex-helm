@@ -15,8 +15,8 @@ sub config {
     monit       => $config->{monit}     || { },
   };
 
-  $openssh->{monit}{enabled}  //= 0;
-  $openssh->{monit}{timeout}  ||= 60;
+  $rblcheck->{monit}{enabled}  //= 0;
+  $rblcheck->{monit}{timeout}  ||= 60;
 
   inspect $rblcheck if Rex::Malta::DEBUG;
 

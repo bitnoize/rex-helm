@@ -5,10 +5,11 @@ check process postfix
     start program = "/usr/sbin/service postfix start"
     stop  program = "/usr/sbin/service postfix stop"
     if failed
-        host <%= $postfix->{address} %>
-        port <%= $postfix->{port} %>
+        host <%= $postfix->{monit}{address} %>
+        port <%= $postfix->{monit}{port} %>
         use type tcp with protocol smtp
-        with timeout 10 seconds for 2 times within 3 cycles
+        with timeout <%= $postfix->{monit}{timeout} %> seconds
+        for 2 times within 3 cycles
     then alert
     if 5 restarts with 5 cycles then timeout
     depend master_bin

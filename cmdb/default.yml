@@ -13,16 +13,22 @@ system:
 # aptproxy:     http://127.0.0.1:9080
   backports:    1
 # extradebs:    0
-# extralink:    ~
+# extralink:    http://debs.test.net
 # packages:     [ ]
 # swapfile:     /swap
 # swapdize:     1024k
 
 network:
   active:       1
+# forward:      0
 # resolver:     [ 8.8.8.8, 8.8.4.4 ]
 # ethernet:     { }
 # bridge:       { }
+
+firewall:
+  active:       1
+# type:         none
+# restart:      1
 
 shaper:
   active:       0
@@ -34,21 +40,40 @@ shaper:
 syslog:
   active:       1
 # restart:      1
+# rsyslog:      { }
+  logrotate:
+    'apt':        1
+    'aptitude':   1
+    'dpkg':       1
+    'rsyslog':    1
 
-firewall:
+  monit:
+    enabled:      1
+
+cron:
   active:       1
-# type:         none
 # restart:      1
+# crontab:      { }
+# hourly:       { }
+# daily:        { }
+# weekly:       { }
+# monthly:      { }
+  monit:
+    enabled:      1
 
 openssh:
   active:       1
 # address:      [ 0.0.0.0 ]
 # port:         22
 # restart:      1
+  monit:
+    enabled:      1
 
 ntp:
   active:       1
 # restart:      1
+  monit:
+    enabled:      1
 
 iperf:
   active:       0
@@ -57,6 +82,11 @@ iperf:
 # address:      0.0.0.0
 # port:         5281
 # targets:      [ ]
+  monit:
+    enabled:      1
+#   address:      127.0.0.1
+#   port:         5281
+#   timeout:      10
 
 qemukvm:
   active:       0
@@ -70,11 +100,12 @@ dnsmasq:
 # interface:    [ lo ]
 # port:         53
 # upstream:     [ 8.8.8.8, 8.8.4.4 ]
-  confs:        [ upstream ]
+# conf:         { }
   monit:
     enabled:      1
 #   address:      127.0.0.1
 #   port:         53
+#   timeout:      10
 
 unbound:
   active:       0
@@ -83,20 +114,40 @@ unbound:
 # address:      [ 127.0.0.1 ]
 # port:         53
 # allowed:      [ 127.0.0.1/8 ]
-# monit:        0
-  confs:        [ qname-minimisation, root-auto-trust-anchor-file ]
+  conf:
+    'qname-minimisation': 1
+    'root-auto-trust-anchor-file': 1
+
+  monit:
+    enabled:      1
+#   address:      127.0.0.1
+#   port:         53
+#   timeout:      10
 
 nginx:
   active:       0
-# confs:        [ ]
-# snippets:     [ ]
-# secrets:      [ ]
 # restart:      1
-# monit:        0
-# sites:
-#   'default':
-#     enabled:      1
-#     address:      [ 127.0.0.1 ]
+  conf:
+    'cache':      1
+    'gzip':       1
+    'resolver':   1
+    'ssl':        0
+    'cloudflare': 0
+
+# snippets:     { }
+# secrets:      { }
+
+  sites:
+    'default':
+      enabled:      1
+      address:      [ 127.0.0.1 ]
+#     port:         80
+ 
+  monit:
+    enabled:      1
+#   address:      127.0.0.1
+#   port:         80
+#   timeout:      10
 
 mysql:
   active:       0
@@ -104,88 +155,66 @@ mysql:
 # address:      127.0.0.1
 # port:         3306
 # rootpw:       'secret'
-# monit:        0
-# confs:        [ ]
+# conf:         { }
+  monit:
+    enabled:      1
 
 redis:
   active:       0
+# restart:      1
 # address:      [ 127.0.0.1 ]
 # port:         6379
-# restart:      1
-# monit:        0
+  monit:
+    enabled:      1
+#   address:      127.0.0.1
+#   port:         6379
+#   timeout:      10
+#   dumpsize:     100
 
 postfix:
   active:       0
 # restart:      1
-# monit:        0
 
 rblcheck:
   active:       0
 # hosts:        [ 127.0.0.1 ]
 # lists:        [ zen.spamhaus.org ]
-# monit:        0
+  monit:
+    enabled:      1
+#   timeout:      10
 
 monit:
   active:       1
 # restart:      1
 # address:      127.0.0.1
 # port:         2812
-  auth:         monit:secret
-  mmonit:       "https://monit:secret\@monit.test.net:3127/collector"
+# auth:         monit:secret
+# mmonit:       "https://monit:secret\@monit.test.net:3127/collector"
   confs:
     'system':
-      enabled:      1
-
-    'cron':
-      enabled:      1
-
-    'syslog':
-      enabled:      1
-
-    'openssh':
-      enabled:      1
-
-    'ntp':
       enabled:      1
 
     'sensors':
       enabled:      0
 
-    'qemukvm':
-      enabled:      0
-
-    'iperf':
-      enabled:      0
-      port:         5281
-
-    'unbound':
-      enabled:      0
-#     address:      127.0.0.1
-#     port:         53
-#     timeout:      30
-
-    'mysql':
-      enabled:      0
-
-    'redis':
-      enabled:      0
-
-    'nginx':
-      enabled:      0
-
-    'postfix':
-      enabled:      0
-
-    'rblcheck':
-      enabled:      0
-      timeout:      30
+mmonit:
+  active:       0
+# restart:      1
+# version:      3.7.1
+# platform:     linux-x64
+# path:         /opt/mmonit
+# address:      0.0.0.0
+# port:         3127
+# schema:       mysql://monit:monit@127.0.0.1/mmonit
+# owner:        Unknown
+# lecense:      none
 
 collectd:
   active:       0
 # restart:      1
 # server:       0
 # interval:     60
-# remote:       ~
+# remote:       graph.test.net
 # address:      0.0.0.0
 # port:         25826
 # interface:    eth0
@@ -218,18 +247,6 @@ collectd:
 
     'rrdtool': 
       enabled:      1
-
-mmonit:
-  active:       0
-# restart:      1
-# version:      3.7.1
-# platform:     linux-x64
-# path:         /opt/mmonit
-# address:      0.0.0.0
-# port:         3127
-# schema:       mysql://monit:monit@127.0.0.1/mmonit
-# owner:        Unknown
-# lecense:      none
 
 rsync:
   active:       0

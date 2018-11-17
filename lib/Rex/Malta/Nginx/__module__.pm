@@ -8,14 +8,12 @@ use Rex -feature => [ '1.4' ];
 sub config {
   return unless my $config = Rex::Malta::config( nginx => @_ );
 
-  my @default_confs = qw/upstream/;
-
   my $nginx = {
     active      => $config->{active}    // 0,
     restart     => $config->{restart}   // 1,
-    confs       => $config->{confs}     || [ ],
-    snippets    => $config->{snippets}  || [ ],
-    secrets     => $config->{secrets}   || [ ],
+    conf        => $config->{conf}      || { },
+    snippets    => $config->{snippets}  || { },
+    secrets     => $config->{secrets}   || { },
     sites       => $config->{sites}     || { },
     monit       => $config->{monit}     || { },
   };
@@ -50,28 +48,52 @@ task 'setup' => sub {
     owner => 'root', group => 'www-data', mode => 640,
     source => "files/nginx.dhparam.pem";
 
-  my $confs = $nginx->{confs};
+  my $conf = $nginx->{conf};
 
-  for my $name ( @$confs ) {
-    file "/etc/nginx/conf.d/$name.conf", ensure => 'present',
-      owner => 'root', group => 'root', mode => 644,
-      source => "files/nginx.conf.$name";
+  for my $name ( keys %$conf ) {
+    my $enabled = $conf->{ $name };
+
+    if ( $enabled ) {
+      file "/etc/nginx/conf.d/$name.conf", ensure => 'present',
+        owner => 'root', group => 'root', mode => 644,
+        source => "files/nginx.conf.$name";
+    }
+
+    else {
+      unlink "/etc/nginx/conf.d/$name.conf";
+    }
   }
 
   my $snippets = $nginx->{snippets};
 
-  for my $name ( @$snippets ) {
-    file "/etc/nginx/snippets/$name.conf", ensure => 'present',
-      owner => 'root', group => 'root', mode => 644,
-      source => "files/nginx.snippet.$name";
+  for my $name ( keys %$snippets ) {
+    my $enabled = $snippets->{ $name };
+
+    if ( $enabled ) {
+      file "/etc/nginx/snippets/$name.conf", ensure => 'present',
+        owner => 'root', group => 'root', mode => 644,
+        source => "files/nginx.snippet.$name";
+    }
+
+    else {
+      unlink "/etc/nginx/snippets/$name.conf";
+    }
   }
 
   my $secrets = $nginx->{secrets};
 
-  for my $name ( @$secrets ) {
-    file "/etc/nginx/$name.secrets", ensure => 'present',
-      owner => 'root', group => 'www-data', mode => 640,
-      source => "files/nginx.secrets.$name";
+  for my $name ( keys %$secrets ) {
+    my $enabled = $secrets->{ $name };
+
+    if ( $enabled ) {
+      file "/etc/nginx/$name.secrets", ensure => 'present',
+        owner => 'root', group => 'www-data', mode => 640,
+        source => "files/nginx.secrets.$name";
+    }
+
+    else {
+      unlink "/etc/nginx/$name.secrets";
+    }
   }
 
   file [ "/var/www/default" ], ensure => 'directory',
@@ -150,8 +172,9 @@ task 'clean' => sub {
   file [
     "/etc/nginx/secrets", "/etc/nginx/secret",
     "/etc/nginx/confs", "/etc/nginx/auths", "/etc/nginx/certs",
-    "/etc/nginx/fastcgi.conf", "/var/www/html",
-    "/etc/nginx/koi-win", "/etc/nginx/koi-utf", "/etc/nginx/win-utf"
+    "/etc/nginx/fastcgi.conf",
+    "/etc/nginx/koi-win", "/etc/nginx/koi-utf", "/etc/nginx/win-utf",
+    "/var/www/html",
   ], ensure => 'absent';
 
   service 'nginx' => "restart" if $nginx->{restart};
@@ -165,8 +188,10 @@ task 'remove' => sub {
   ], ensure => 'absent';
 
   file [
-    "/etc/default/nginx", "/etc/nginx",
-    "/var/cache/nginx", "/var/log/nginx",
+    "/etc/default/nginx",
+    "/etc/nginx",
+    "/var/cache/nginx",
+    "/var/log/nginx",
     "/etc/logrotate.d/nginx",
     "/etc/monit/conf-available/nginx",
     "/etc/monit/conf-enabled/nginx",

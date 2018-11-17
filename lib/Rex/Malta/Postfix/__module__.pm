@@ -15,6 +15,9 @@ sub config {
   };
 
   $postfix->{monit}{enabled}  //= 0;
+  $postfix->{monit}{address}  ||= "127.0.0.1";
+  $postfix->{monit}{port}     ||= 25;
+  $postfix->{monit}{timeout}  ||= 10;
 
   inspect $postfix if Rex::Malta::DEBUG;
 
@@ -26,13 +29,10 @@ task 'setup' => sub {
 
   pkg [ qw/postfix/ ], ensure => 'present';
 
-  # There no any configuration yet
   Rex::Logger::info( "There is no Postfix configuration yet" => 'warn' );
 
   service 'postfix', ensure => "started";
   service 'postfix' => "restart" if $postfix->{restart};
-
-  # TODO monit configuration
 };
 
 task 'clean' => sub {

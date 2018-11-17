@@ -65,7 +65,8 @@ task 'remove' => sub {
   pkg [ qw/ntp/ ], ensure => 'absent';
 
   file [
-    "/etc/default/ntp", "/etc/ntp.conf",
+    "/etc/default/ntp",
+    "/etc/ntp.conf",
     "/etc/monit/conf-available/ntp",
     "/etc/monit/conf-enabled/ntp",
   ], ensure => 'absent';

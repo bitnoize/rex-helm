@@ -13,7 +13,7 @@ sub config {
     restart     => $config->{restart}   // 1,
     server      => $config->{server}    // 0,
     interval    => $config->{interval}  || 60,
-    remote      => $config->{remote}    || undef,
+    remote      => $config->{remote}    || "graph.test.net",
     address     => $config->{address}   || "0.0.0.0",
     port        => $config->{port}      || 25826,
     interface   => $config->{interface} || "eth0",
@@ -96,8 +96,11 @@ task 'remove' => sub {
 
   pkg [ qw/collectd collectd-core/ ], ensure => 'absent';
 
+  # Do NOT remove /var/lib/collectd
+
   file [
-    "/etc/default/collectd", "/etc/collectd", "/var/lib/collectd",
+    "/etc/default/collectd",
+    "/etc/collectd",
   ], ensure => 'absent';
 };
 

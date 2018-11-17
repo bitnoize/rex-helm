@@ -56,7 +56,7 @@ task 'setup' => sub {
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.openssh" );
 
-    if ( $openssh->{monit} ) {
+    if ( $openssh->{monit}{enabled} ) {
       symlink "/etc/monit/conf-available/openssh",
         "/etc/monit/conf-enabled/openssh";
     }
@@ -75,7 +75,7 @@ task 'clean' => sub {
 task 'remove' => sub {
   my $openssh = config -force;
 
-  # Do NOT remove OpenSSH
+  Rex::Logger::info( "OpenSSH does NOT removed" => 'warn' );
 
   file [
     "/etc/monit/conf-available/openssh",

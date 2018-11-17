@@ -14,7 +14,8 @@ sub config {
     address     => $config->{address} || "0.0.0.0",
     port        => $config->{port}    || 2812,
     auth        => $config->{auth}    || "monit:secret",
-    mmonit      => $config->{mmonit}  || "",
+    mmonit      => $config->{mmonit}  ||
+                      "https://monit:secret\@monit.test.net:3127/collector",
     confs       => $config->{confs}   || { },
   };
 
@@ -119,7 +120,9 @@ task 'remove' => sub {
   pkg [ qw/monit/ ], ensure => 'absent';
 
   file [
-    "/etc/default/monit", "/etc/monit", "/var/lib/monit",
+    "/etc/default/monit",
+    "/etc/monit",
+    "/var/lib/monit",
     "/etc/logrotate.d/monit",
   ], ensure => 'absent';
 };

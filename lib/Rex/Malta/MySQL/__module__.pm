@@ -14,14 +14,11 @@ sub config {
     address     => $config->{address}   || "127.0.0.1",
     port        => $config->{port}      || 3306,
     rootpw      => $config->{rootpw}    || "",
-    confs       => $config->{confs}     || [ ],
+    conf        => $config->{conf}      || { },
     monit       => $config->{monit}     || { },
   };
 
   $mysql->{monit}{enabled}  //= 0;
-  $mysql->{monit}{address}  ||= $mysql->{address};
-  $mysql->{monit}{port}     ||= $mysql->{port};
-  $mysql->{monit}{timeout}  ||= 10;
 
   inspect $mysql if Rex::Malta::DEBUG;
 
@@ -48,12 +45,20 @@ task 'setup' => sub {
     owner => 'root', group => 'root', mode => 600,
     content => template( "files/mysql.debian.conf" );
 
-  my $confs = $mysql->{confs};
+  my $conf = $mysql->{conf};
 
-  for my $name ( @$confs ) {
-    file "/etc/mysql/conf.d/$name.cnf", ensure => 'present',
-      owner => 'root', group => 'root', mode => 644,
-      content => template( "files/mysql.conf.$name" );
+  for my $name ( keys %$conf ) {
+    my $enabled = $conf->{ $name };
+
+    if ( $enabled ) {
+      file "/etc/mysql/conf.d/$name.cnf", ensure => 'present',
+        owner => 'root', group => 'root', mode => 644,
+        content => template( "files/mysql.conf.$name" );
+    }
+
+    else {
+      unlink "/etc/mysql/conf.d/$name.cnf";
+    }
   }
 
   service 'mysql', ensure => "started";
@@ -101,8 +106,11 @@ task 'remove' => sub {
     qw/mysql-server mysql-client/
   ], ensure => 'absent';
 
+  Rex::Logger::info( "MySQL datadir will not removed" => 'warn' );
+
   file [
-    "/etc/default/mysql", "/etc/mysql",
+    "/etc/default/mysql",
+    "/etc/mysql",
     "/etc/logrotate.d/mysql-server",
     "/etc/monit/conf-available/mysql",
     "/etc/monit/conf-enabled/mysql",

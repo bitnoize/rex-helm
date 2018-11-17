@@ -8,16 +8,14 @@ use Rex -feature => [ '1.4' ];
 sub config {
   return unless my $config = Rex::Malta::config( unbound => @_ );
 
-  my @default_confs = qw/qname-minimisation root-auto-trust-anchor-file/;
-
   my $unbound = {
     active      => $config->{active}    // 0,
     restart     => $config->{restart}   // 1,
     resolver    => $config->{resolver}  // 0,
     address     => $config->{address}   || [ "127.0.0.1" ],
     port        => $config->{port}      || 53,
-    allowed     => $config->{allowed}   || [ qw{127.0.0.0/8} ],
-    confs       => $config->{confs}     || [ @default_confs ],
+    allowed     => $config->{allowed}   || [ "127.0.0.0/8" ],
+    conf        => $config->{conf}      || { },
     monit       => $config->{monit}     || { },
   };
 
@@ -51,12 +49,20 @@ task 'setup' => sub {
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/unbound.conf" );
 
-  my $confs = $unbound->{confs};
+  my $conf = $unbound->{conf};
 
-  for my $name ( @$confs ) {
-    file "/etc/unbound/unbound.conf.d/$name.conf", ensure => 'present',
-      owner => 'root', group => 'root', mode => 644,
-      content => template( "files/unbound.conf.$name" );
+  for my $name ( keys %$conf ) {
+    my $enabled = $conf->{ $name };
+
+    if ( $enabled ) {
+      file "/etc/unbound/unbound.conf.d/$name.conf", ensure => 'present',
+        owner => 'root', group => 'root', mode => 644,
+        content => template( "files/unbound.conf.$name" );
+    }
+
+    else {
+      unlink "/etc/unbound/unbound.conf.d/$name.conf";
+    }
   }
 
   service 'unbound', ensure => "started";
@@ -65,10 +71,7 @@ task 'setup' => sub {
   if ( $unbound->{resolver} ) {
     file "/etc/resolv.conf", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
-      content => template( "files/resolv.conf.unbound" ),
-      on_change => sub {
-        Rex::Logger::info( "Unbound set as main resolver" => 'info' )
-      };
+      content => template( "files/resolv.conf.unbound" );
   }
 
   if ( is_dir "/etc/monit" ) {
@@ -99,8 +102,11 @@ task 'remove' => sub {
   pkg [ qw/unbound/ ], ensure => 'absent';
 
   file [
-    "/etc/default/unbound", "/etc/unbound", "/var/lib/unbound",
-    "/etc/monit/conf-available/unbound", "/etc/monit/conf-enabled/unbound",
+    "/etc/default/unbound",
+    "/etc/unbound",
+    "/var/lib/unbound",
+    "/etc/monit/conf-available/unbound",
+    "/etc/monit/conf-enabled/unbound",
   ], ensure => 'absent';
 };
 

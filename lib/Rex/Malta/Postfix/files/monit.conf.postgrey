@@ -5,10 +5,11 @@ check process postgrey
     start program = "/usr/sbin/service postgrey start"
     stop  program = "/usr/sbin/service postgrey stop"
     if failed
-        host <%= $postfix->{address} %>
-        port <%= $postfix->{port} %>
+        host <%= $postfix->{monit}{grey_address} %>
+        port <%= $postfix->{monit}{grey_port} %>
         use type tcp with protocol smtp
-        with timeout 10 seconds for 2 times within 3 cycles
+        with timeout <%= $postfix->{monit}{grey_timeout} %> seconds
+        for 2 times within 3 cycles
     then alert
     if 5 restarts with 5 cycles then timeout
     depend postgrey_bin

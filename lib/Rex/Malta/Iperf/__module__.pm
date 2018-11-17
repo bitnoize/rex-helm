@@ -103,10 +103,12 @@ task 'remove' => sub {
 
   pkg [ qw/iperf/ ], ensure => 'absent';
 
+  # Do NOT remove /var/lib/iperf
+
   file [
-    "/etc/iperf", "/etc/default/iperf",
+    "/etc/default/iperf",
+    "/etc/iperf",
     "/etc/systemd/system/iperf.service",
-    "/var/lib/iperf",
     "/usr/local/bin/speedtest",
     "/usr/local/bin/speedtest.run",
     "/etc/monit/conf-available/iperf",

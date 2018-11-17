@@ -10,6 +10,7 @@ sub config {
 
   my $network = {
     active      => $config->{active}    // 0,
+    forward     => $config->{forward}   // 0,
     resolver    => $config->{resolver}  || [ qw/8.8.8.8 8.8.4.4/ ],
     ethernet    => $config->{ethernet}  || { },
     bridge      => $config->{bridge}    || { },
@@ -27,12 +28,19 @@ task 'setup' => sub {
     qw/netbase ifupdown net-tools/
   ], ensure => "present";
 
+  if ( $network->{forward} ) {
+    file "/etc/sysctl.d/10-forward.conf", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/sysctl.conf.10-forward" ),
+      on_change => sub {
+        run 'sysctl_reload', timeout => 10,
+          command => "sysctl -p /etc/sysctl.d/10-forward.conf";
+      };
+  }
+
   file "/etc/resolv.conf", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
-    content => template( "files/resolv.conf" ),
-    on_change => sub {
-      Rex::Logger::info( "Resolver changed" => 'info' )
-    };
+    content => template( "files/resolv.conf" );
 
   #
   # Interfaces

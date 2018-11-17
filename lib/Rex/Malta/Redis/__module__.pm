@@ -20,6 +20,7 @@ sub config {
   $redis->{monit}{address}  ||= $redis->{address}[0];
   $redis->{monit}{port}     ||= $redis->{port};
   $redis->{monit}{timeout}  ||= 10;
+  $redis->{monit}{dumpsize} ||= 100;
 
   inspect $redis if Rex::Malta::DEBUG;
 
@@ -79,9 +80,11 @@ task 'remove' => sub {
     qw/redis-server redis-tools/
   ], ensure => 'absent';
 
+  # Do NOT remove /var/lib/redis
+
   file [
-    "/etc/default/redis-server", "/etc/redis",
-    "/var/lib/redis",
+    "/etc/default/redis-server",
+    "/etc/redis",
     "/etc/logrotate.d/redis-server",
     "/etc/monit/conf-available/redis",
     "/etc/monit/conf-enabled/redis",

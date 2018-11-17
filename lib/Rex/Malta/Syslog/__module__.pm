@@ -11,8 +11,12 @@ sub config {
   my $syslog = {
     active      => $config->{active}    // 0,
     restart     => $config->{restart}   // 1,
-    monit       => $config->{monit}     // 0,
+    rsyslog     => $config->{rsyslog}   || { },
+    logrotate   => $config->{logrotate} || { },
+    monit       => $config->{monit}     || { },
   };
+
+  $syslog->{monit}{enabled} //= 0;
 
   inspect $syslog if Rex::Malta::DEBUG;
 
@@ -33,19 +37,43 @@ task 'setup' => sub {
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/rsyslog.conf" );
 
-  file "/etc/logrotate.conf", ensure => 'present',
-    owner => 'root', group => 'root', mode => 644,
-    content => template( "files/logrotate.conf" );
+  my $rsyslog = $syslog->{rsyslog};
+
+  for my $name ( keys %$rsyslog ) {
+    my $enabled = $rsyslog->{ $name };
+
+    if ( $enabled ) {
+      file "/etc/rsyslog.d/$name.conf", ensure => 'present',
+        owner => 'root', group => 'root', mode => 644,
+        content => template( "files/rsyslog.conf.$name" );
+    }
+
+    else {
+      unlink "/etc/rsyslog.d/$name.conf";
+    }
+  }
 
   service 'rsyslog', ensure => "started";
   service 'rsyslog' => "restart" if $syslog->{restart};
 
-  my @logrotate = qw/apt aptitude dpkg rsyslog/;
+  file "/etc/logrotate.conf", ensure => 'present',
+    owner => 'root', group => 'root', mode => 644,
+    content => template( "files/logrotate.conf" );
 
-  for my $name ( @logrotate ) {
-    file "/etc/logrotate.d/$name", ensure => 'present',
-      owner => 'root', group => 'root', mode => 644,
-      content => template( "files/logrotate.conf.$name" );
+  my $logrotate = $syslog->{logrotate};
+
+  for my $name ( keys %$logrotate ) {
+    my $enabled = $logrotate->{ $name };
+
+    if ( $enabled ) {
+      file "/etc/logrotate.d/$name", ensure => 'present',
+        owner => 'root', group => 'root', mode => 644,
+        content => template( "files/logrotate.conf.$name" );
+    }
+
+    else {
+      unlink "/etc/logrotate.d/$name";
+    }
   }
 
   if ( is_dir "/etc/monit" ) {
@@ -64,16 +92,6 @@ task 'setup' => sub {
   }
 };
 
-task 'clean' => sub {
-  return unless my $syslog = config;
-
-  file [
-    "/var/log/mail.err", "/var/log/mail.warn",
-    "/var/log/mail.info", "/var/log/mail.log",
-    "/var/log/lpr.log", "/var/log/news.log",
-  ], ensure => 'absent';
-};
-
 task 'logrotate' => sub {
   return unless my $syslog = config;
 
@@ -81,10 +99,23 @@ task 'logrotate' => sub {
     command => "/usr/sbin/logrotate -f /etc/logrotate.conf";
 };
 
+task 'clean' => sub {
+  return unless my $syslog = config;
+
+  file [
+    "/var/log/mail.err",
+    "/var/log/mail.warn",
+    "/var/log/mail.info",
+    "/var/log/mail.log",
+    "/var/log/lpr.log",
+    "/var/log/news.log",
+  ], ensure => 'absent';
+};
+
 task 'remove' => sub {
   my $syslog = config -force;
 
-  # Do NOT remove rsyslog and logrotate
+  Rex::Logger::info( "Syslog does NOT removed" => 'warn' );
 
   file [
     "/etc/monit/conf-available/syslog",

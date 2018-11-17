@@ -16,7 +16,7 @@ sub config {
     interface   => $config->{interface} || [ "lo" ],
     port        => $config->{port}      || 53,
     upstream    => $config->{upstream}  || [ qw/8.8.8.8 8.8.4.4/ ],
-    confs       => $config->{confs}     || [ ],
+    conf        => $config->{conf}      || { },
     monit       => $config->{monit}     || { },
   };
 
@@ -54,12 +54,20 @@ task 'setup' => sub {
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/dnsmasq.conf" );
 
-  my $confs = $dnsmasq->{confs};
+  my $conf = $dnsmasq->{conf};
 
-  for my $name ( @$confs ) {
-    file "/etc/dnsmasq.d/$name", ensure => 'present',
-      owner => 'root', group => 'root', mode => 644,
-      content => template( "files/dnsmasq.conf.$name" );
+  for my $name ( keys %$conf ) {
+    my $enabled = $conf->{ $name };
+
+    if ( $enabled ) {
+      file "/etc/dnsmasq.d/$name", ensure => 'present',
+        owner => 'root', group => 'root', mode => 644,
+        content => template( "files/dnsmasq.conf.$name" );
+    }
+
+    else {
+      unlink "/etc/dnsmasq.d/$name";
+    }
   }
 
   service 'dnsmasq', ensure => "started";
@@ -98,8 +106,11 @@ task 'remove' => sub {
   pkg [ qw/dnsmasq/ ], ensure => "absent";
 
   file [
-    "/etc/default/dnsmasq", "/etc/dnsmasq.conf", "/etc/dnsmasq.d",
-    "/etc/monit/conf-available/dnsmasq", "/etc/monit/conf-enabled/dnsmasq",
+    "/etc/default/dnsmasq",
+    "/etc/dnsmasq.conf",
+    "/etc/dnsmasq.d",
+    "/etc/monit/conf-available/dnsmasq",
+    "/etc/monit/conf-enabled/dnsmasq",
   ], ensure => 'absent';
 };
 
