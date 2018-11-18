@@ -96,7 +96,7 @@ task 'setup' => sub {
     }
   }
 
-  file [ "/var/www/default" ], ensure => 'directory',
+  file "/var/www/default", ensure => 'directory',
     owner => 'root', group => 'www-data', mode => 755;
 
   my $sites = $nginx->{sites};
@@ -144,13 +144,13 @@ task 'setup' => sub {
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/nginx.index.html" );
 
-  if ( is_file "/etc/logrotate.conf" ) {
+  if ( is_installed "logrotate" ) {
     file "/etc/logrotate.d/nginx", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/logrotate.conf.nginx" );
   }
 
-  if ( is_dir "/etc/monit" ) {
+  if ( is_installed "monit" ) {
     file "/etc/monit/conf-available/nginx", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.nginx" );
@@ -163,6 +163,8 @@ task 'setup' => sub {
     else {
       unlink "/etc/monit/conf-enabled/nginx";
     }
+
+    service 'monit' => "restart" if $nginx->{restart};
   }
 };
 

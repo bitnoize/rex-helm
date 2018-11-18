@@ -1,5 +1,5 @@
 #
-# Configuration Management Database
+# Configuration defaults
 #
 
 system:
@@ -7,7 +7,8 @@ system:
 # rootpw:       ''
   grubcmd:      'quiet nomodeset net.ifnames=0 biosdevname=0'
 # timezone:     Etc/UTC
-# release:      debian-stretch
+# sysctl:       { }
+# release:      unknown
 # kernver:      ''
 # paranoid:     0
 # aptproxy:     http://127.0.0.1:9080
@@ -36,6 +37,59 @@ shaper:
 # link:         [ 100Mbit, 100Mbit ]
 # priv:         [  10Mbit,  90Mbit ]
 # misc:         [   1Mbit,   2Mbit ]
+
+monit:
+  active:       1
+# restart:      1
+# address:      127.0.0.1
+# port:         2812
+# auth:         monit:secret
+# mmonit:       "https://monit:secret\@monit.test.net:3127/collector"
+  confs:
+    'system':
+      enabled:      1
+
+    'sensors':
+      enabled:      0
+
+collectd:
+  active:       0
+# restart:      1
+# server:       0
+# interval:     60
+# remote:       graph.test.net
+# address:      0.0.0.0
+# port:         25826
+# interface:    eth0
+# username:     stats
+# password:     'secret'
+  confs:
+    'syslog':
+      enabled:      1
+
+    'network':
+      enabled:      1
+
+    'cpu':
+      enabled:      1
+
+    'memory':
+      enabled:      1
+
+    'swap':    
+      enabled:      1
+
+    'load':    
+      enabled:      1
+
+    'interface':
+      enabled:      1
+
+#   'netlink':
+#     enabled:      0
+
+    'rrdtool': 
+      enabled:      1
 
 syslog:
   active:       1
@@ -91,6 +145,8 @@ iperf:
 qemukvm:
   active:       0
 # restart:      1
+  monit:
+    enabled:      1
 
 dnsmasq:
   active:       0
@@ -174,6 +230,8 @@ redis:
 postfix:
   active:       0
 # restart:      1
+  monit:
+    enabled:      1
 
 rblcheck:
   active:       0
@@ -182,20 +240,6 @@ rblcheck:
   monit:
     enabled:      1
 #   timeout:      10
-
-monit:
-  active:       1
-# restart:      1
-# address:      127.0.0.1
-# port:         2812
-# auth:         monit:secret
-# mmonit:       "https://monit:secret\@monit.test.net:3127/collector"
-  confs:
-    'system':
-      enabled:      1
-
-    'sensors':
-      enabled:      0
 
 mmonit:
   active:       0
@@ -208,45 +252,6 @@ mmonit:
 # schema:       mysql://monit:monit@127.0.0.1/mmonit
 # owner:        Unknown
 # lecense:      none
-
-collectd:
-  active:       0
-# restart:      1
-# server:       0
-# interval:     60
-# remote:       graph.test.net
-# address:      0.0.0.0
-# port:         25826
-# interface:    eth0
-# username:     stats
-# password:     'secret'
-  confs:
-    'syslog':
-      enabled:      1
-
-    'network':
-      enabled:      1
-
-    'cpu':
-      enabled:      1
-
-    'memory':
-      enabled:      1
-
-    'swap':    
-      enabled:      1
-
-    'load':    
-      enabled:      1
-
-    'interface':
-      enabled:      1
-
-#   'netlink':
-#     enabled:      0
-
-    'rrdtool': 
-      enabled:      1
 
 rsync:
   active:       0

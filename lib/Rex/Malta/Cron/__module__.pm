@@ -58,10 +58,28 @@ task 'setup', sub {
     }
   }
 
+  for my $period ( qw/hourly daily weekly monthly/ ) {
+    my $conf = $cron->{ $period };
+
+    for my $name ( keys %$conf ) {
+      my $enabled = $conf->{ $name };
+
+      if ( $enabled ) {
+        file "/etc/cron.$period/$name", ensure => 'present',
+          owner => 'root', group => 'root', mode => 644,
+          source => "files/cron.$period.$name";
+      }
+
+      else {
+        unlink "/etc/cron.$period/$name";
+      }
+    }
+  }
+
   service 'cron', ensure => "started";
   service 'cron' => "restart" if $cron->{restart};
 
-  if ( is_dir "/etc/monit" ) {
+  if ( is_installed "monit" ) {
     file "/etc/monit/conf-available/cron", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.cron" );
@@ -74,6 +92,8 @@ task 'setup', sub {
     else {
       unlink "/etc/monit/conf-enabled/cron";
     }
+
+    service 'monit' => "restart" if $cron->{restart};
   }
 };
 

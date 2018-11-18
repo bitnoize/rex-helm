@@ -72,13 +72,13 @@ task 'setup' => sub {
       command => "mysqladmin -u root password $rootpw";
   }
 
-  if ( is_file "/etc/logrotate.conf" ) {
+  if ( is_installed "logrotate" ) {
     file "/etc/logrotate.d/mysql-server", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/logrotate.conf.mysql" )
   }
 
-  if ( is_dir "/etc/monit" ) {
+  if ( is_installed "monit" ) {
     file "/etc/monit/conf-available/mysql", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.mysql" );
@@ -91,6 +91,8 @@ task 'setup' => sub {
     else {
       unlink "/etc/monit/conf-enabled/mysql";
     }
+
+    service 'monit' => "restart" if $mysql->{restart};
   }
 };
 

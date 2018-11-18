@@ -42,7 +42,7 @@ task 'setup' => sub {
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/rblcheck.conf.lists" );
 
-  if ( is_dir "/etc/monit" ) {
+  if ( is_installed "monit" ) {
     file "/etc/monit/conf-available/rblcheck", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.rblcheck" );
@@ -55,6 +55,8 @@ task 'setup' => sub {
     else {
       unlink "/etc/monit/conf-enabled/rblcheck";
     }
+
+    service 'monit' => "restart" if $rblcheck->{restart};
   }
 };
 

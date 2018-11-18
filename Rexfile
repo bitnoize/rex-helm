@@ -46,6 +46,9 @@ set 'modules' => [
   'Network',    # Network configuration
   'Firewall',   # Iptables rules
   'Shaper',     # Traffic control
+
+  'Monit',      # Service monitoring
+  'Collectd',   # Collect and visualize various metrics
   'Syslog',     # Syslog facility
   'Cron',       # Cron scheduler
   'OpenSSH',    # OpenSSH service
@@ -63,8 +66,6 @@ set 'modules' => [
   'RBLCheck',   # RBLCheck script
   'Freight',    # Deb repositories for busy people
   'Rsync',      # Remote sync
-  'Monit',      # Service monitoring
-  'Collectd',   # Collect and visualize various metrics
   'MMonit',     # Monit combiner
   'CollectdWeb',# Collectd combiner
   'Gitweb',     # Gitweb service

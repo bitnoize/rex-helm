@@ -41,7 +41,7 @@ task 'setup' => sub {
   service 'libvirt-guests', ensure => 'started';
   service 'libvirtd' => "restart" if $qemukvm->{restart};
 
-  if ( is_dir "/etc/monit" ) {
+  if ( is_installed "monit" ) {
     file "/etc/monit/conf-available/qemukvm", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.qemukvm" );
@@ -54,6 +54,8 @@ task 'setup' => sub {
     else {
       unlink "/etc/monit/conf-enabled/qemukvm";
     }
+
+    service 'monit' => "restart" if $qemukvm->{restart};
   }
 };
 
@@ -70,7 +72,8 @@ task 'remove' => sub {
   ], ensure => 'absent';
 
   file [
-    "/etc/default/libvirtd", "/etc/default/libvirt-fuests",
+    "/etc/default/libvirtd",
+    "/etc/default/libvirt-guests",
     "/etc/monit/conf-available/qemukvm",
     "/etc/monit/conf-enabled/qemukvm",
   ], ensure => 'absent';

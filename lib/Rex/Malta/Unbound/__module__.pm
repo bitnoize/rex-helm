@@ -74,7 +74,7 @@ task 'setup' => sub {
       content => template( "files/resolv.conf.unbound" );
   }
 
-  if ( is_dir "/etc/monit" ) {
+  if ( is_installed "monit" ) {
     file "/etc/monit/conf-available/unbound", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.unbound" );
@@ -87,6 +87,8 @@ task 'setup' => sub {
     else {
       unlink "/etc/monit/conf-enabled/unbound";
     }
+  
+    service 'monit' => "restart" if $unbound->{restart};
   }
 };
 

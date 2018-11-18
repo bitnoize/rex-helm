@@ -113,11 +113,11 @@ task 'remove' => sub {
         command => "systemctl daemon-reload";
     };
 
-  file [ $mmonit->{workdir} ], ensure => 'absent';
-
   file [
     "/etc/security/limits.d/mmonit.conf",
-    "/etc/tmpfiles.d/mmonit.conf", "/root/mmonit.state"
+    "/etc/tmpfiles.d/mmonit.conf",
+    "/root/mmonit.state",
+    $mmonit->{workdir},
   ], ensure => 'absent';
 };
 

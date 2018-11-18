@@ -51,7 +51,7 @@ task 'setup' => sub {
   service 'ssh', ensure => "started";
   service 'ssh' => "restart" if $openssh->{restart};
 
-  if ( is_dir "/etc/monit" ) {
+  if ( is_installed "monit" ) {
     file "/etc/monit/conf-available/openssh", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.openssh" );
@@ -64,6 +64,8 @@ task 'setup' => sub {
     else {
       unlink "/etc/monit/conf-enabled/openssh";
     }
+
+    service 'monit' => "restart" if $openssh->{restart};
   }
 };
 

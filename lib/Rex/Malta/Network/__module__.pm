@@ -29,12 +29,12 @@ task 'setup' => sub {
   ], ensure => "present";
 
   if ( $network->{forward} ) {
-    file "/etc/sysctl.d/10-forward.conf", ensure => 'present',
+    file "/etc/sysctl.d/10-ip_forward.conf", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
-      content => template( "files/sysctl.conf.10-forward" ),
+      content => template( "files/sysctl.conf.10-ip_forward" ),
       on_change => sub {
         run 'sysctl_reload', timeout => 10,
-          command => "sysctl -p /etc/sysctl.d/10-forward.conf";
+          command => "sysctl -p /etc/sysctl.d/10-ip_forward.conf";
       };
   }
 

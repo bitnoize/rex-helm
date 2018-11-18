@@ -37,7 +37,7 @@ task 'setup' => sub {
   service 'ntp', ensure => 'started';
   service 'ntp' => "restart" if $ntp->{restart};
 
-  if ( is_dir "/etc/monit" ) {
+  if ( is_installed "monit" ) {
     file "/etc/monit/conf-available/ntp", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.ntp" );
@@ -50,6 +50,8 @@ task 'setup' => sub {
     else {
       unlink "/etc/monit/conf-enabled/ntp";
     }
+
+    service 'monit' => "restart" if $ntp->{restart};
   }
 };
 

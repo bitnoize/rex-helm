@@ -46,13 +46,13 @@ task 'setup' => sub {
   service 'redis', ensure => "started";
   service 'redis' => "restart" if $redis->{restart};
 
-  if ( is_file "/etc/logrotate.conf" ) {
+  if ( is_installed "logrotate" ) {
     file "/etc/logrotate.d/redis-server", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/logrotate.conf.redis" );
   }
 
-  if ( is_dir "/etc/monit" ) {
+  if ( is_installed "monit" ) {
     file "/etc/monit/conf-available/redis", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.redis" );
@@ -65,6 +65,8 @@ task 'setup' => sub {
     else {
       unlink "/etc/monit/conf-enabled/redis";
     }
+
+    service 'monit' => "restart" if $redis->{restart};
   }
 };
 

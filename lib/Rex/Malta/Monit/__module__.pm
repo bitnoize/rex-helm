@@ -83,7 +83,7 @@ task 'setup' => sub {
   service 'monit', ensure => "started";
   service 'monit' => "restart" if $monit->{restart};
 
-  if ( is_file "/etc/logrotate.conf" ) {
+  if ( is_installed "logrotate" ) {
     file "/etc/logrotate.d/monit", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/logrotate.conf.monit" );
@@ -122,7 +122,6 @@ task 'remove' => sub {
   file [
     "/etc/default/monit",
     "/etc/monit",
-    "/var/lib/monit",
     "/etc/logrotate.d/monit",
   ], ensure => 'absent';
 };

@@ -79,7 +79,7 @@ task 'setup' => sub {
       content => template( "files/resolv.conf.dnsmasq" );
   }
 
-  if ( is_dir "/etc/monit" ) {
+  if ( is_installed "monit" ) {
     file "/etc/monit/conf-available/dnsmasq", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.dnsmasq" );
@@ -92,6 +92,8 @@ task 'setup' => sub {
     else {
       unlink "/etc/monit/conf-enabled/dnsmasq";
     }
+
+    service 'monit' => "restart" if $dnsmasq->{restart};
   }
 };
 

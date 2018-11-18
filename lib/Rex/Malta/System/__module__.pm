@@ -15,7 +15,8 @@ sub config {
     rootpw      => $config->{rootpw}    || "",
     grubcmd     => $config->{grubcmd}   || "",
     timezone    => $config->{timezone}  || "Etc/UTC",
-    release     => $config->{release}   || "debian-stretch",
+    sysctl      => $config->{sysctl}    || { },
+    release     => $config->{release}   || "unknown",
     kernver     => $config->{kernver}   || "",
     paranoid    => $config->{paranoid}  // 0,
     aptproxy    => $config->{aptproxy}  || "http://127.0.0.1:9080",
@@ -104,11 +105,28 @@ task 'setup', sub {
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/sysctl.conf" ),
     on_change => sub {
-      run 'sysctl_reload', timeout => 10,
-        command => "sysctl -p /etc/sysctl.conf";
     };
 
   symlink "/etc/sysctl.conf", "/etc/sysctl.d/99-sysctl.conf";
+
+  my $sysctl = $system->{sysctl};
+
+  for my $name ( keys %$sysctl ) {
+    my $enabled = $sysctl->{ $name };
+
+    if ( $enabled ) {
+      file "/etc/sysctl.d/$name.conf", ensure => 'present',
+        owner => 'root', group => 'root', mode => 644,
+        content => template( "files/sysctl.conf.$name" );
+    }
+
+    else {
+      unlink "/etc/sysctl.d/$name.conf";
+    }
+
+    run 'sysctl_reload', timeout => 10,
+      command => "sysctl --system";
+  }
 
   file "/etc/apt/apt.conf.d/10norecommends", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
@@ -127,7 +145,7 @@ task 'setup', sub {
   }
 
   else {
-    file [ "/etc/apt/preferences.d/90kernel" ], ensure => 'absent';
+    file "/etc/apt/preferences.d/90kernel", ensure => 'absent';
   }
 
   if ( $system->{paranoid} ) {
@@ -137,7 +155,7 @@ task 'setup', sub {
   }
 
   else {
-    file [ "/etc/apt/apt.conf.d/50proxy" ], ensure => 'absent';
+    file "/etc/apt/apt.conf.d/50proxy", ensure => 'absent';
   }
 
   if ( $system->{backports} ) {
@@ -277,17 +295,8 @@ task 'sensors' => sub {
 task 'firsttime' => sub {
   my $system = config -force;
 
-  pkg [
-    qw/task-english task-ssh-server xauth rblcheck strace/,
-    qw/eject laptop-detect resolvconf vim-tiny netcat-traditional/,
-    qw/aptitude-doc-en apt-listchanges python-apt python-apt-common/,
-    qw/debconf-utils installation-report reportbug python-reportbug/,
-    qw/debian-faq doc-debian docutils-doc info install-info texinfo/,
-    qw/bc dc nano emacsen-common mutt gnupg2 w3m krb5-locales/,
-    qw/nfs-common rpcbind host ftp telnet iproute tcpd/,
-    qw/dictionaries-common iamerican ibritish ienglish-common wamerican/,
-    qw/exim4 exim4-base exim4-config exim4-daemon-light bsd-mailx procmail/,
-  ], ensure => 'absent';
+  run 'firsttime', timeout => 900,
+    command => template( "\@firsttime" );
 };
 
 1;
@@ -305,5 +314,51 @@ swapon <%= $system->{swapfile} %>
 @swapoff
 swapoff <%= $system->{swapfile} %>
 rm -f <%= $system->{swapfile} %>
+@end
+
+@firsttime
+# There are a lot of shit on default Debian installation
+
+apt-get --purge remove \
+  task-english task-ssh-server xauth rblcheck strace  \
+  eject laptop-detect resolvconf vim-tiny netcat-traditional  \
+  aptitude-doc-en apt-listchanges python-apt python-apt-common  \
+  debconf-utils installation-report reportbug python-reportbug  \
+  debian-faq doc-debian docutils-doc info install-info texinfo  \
+  bc dc nano emacsen-common mutt gnupg2 w3m krb5-locales  \
+  nfs-common rpcbind host ftp telnet iproute tcpd \
+  dictionaries-common iamerican ibritish ienglish-common wamerican  \
+  exim4 exim4-base exim4-config exim4-daemon-light bsd-mailx procmail \
+  lockfile-progs rename xdg-user-dirs hicolor-icon-theme  \
+  libcgi-fast-perl libcgi-pm-perl libfcgi-perl \
+  libclass-accessor-perl libclass-c3-perl libclass-c3-xs-perl libclass-isa-perl \
+  libalgorithm-c3-perl libdata-optlist-perl libdata-section-perl \
+  libhtml-form-perl libhtml-format-perl libhtml-parser-perl libhtml-tagset-perl \
+  libhtml-tree-perl libhttp-cookies-perl libhttp-daemon-perl libhttp-date-perl \
+  libhttp-message-perl libhttp-negotiate-perl \
+  libio-html-perl libio-string-perl \
+  libio-socket-ip-perl libio-socket-ssl-perl \
+  liblog-message-perl liblog-message-simple-perl \
+  libmodule-build-perl libmodule-pluggable-perl libmodule-signature-perl \
+  libpackage-constants-perl libparams-util-perl \
+  libfile-listing-perl libparse-debianchangelog-perl \
+  libpod-latex-perl libpod-readme-perl \
+  libregexp-common-perl libsoftware-license-perl \
+  libsub-exporter-perl libsub-install-perl libsub-name-perl \
+  libtext-soundex-perl libtext-template-perl \
+  liblwp-mediatypes-perl liblwp-protocol-https-perl \
+  libwww-perl liburi-perl libwww-robotrules-perl \
+  libnet-http-perl libnet-smtp-ssl-perl libnet-ssleay-perl \
+  libmailtools-perl \
+  libtimedate-perl \
+  libauthen-sasl-perl \
+  libperl4-corelibs-perl \
+  libswitch-perl \
+  libterm-ui-perl \
+  libmro-compat-perl \
+  libfont-afm-perl \
+  libencode-locale-perl \
+  libcpan-meta-perl \
+  libarchive-extract-perl
 @end
 
