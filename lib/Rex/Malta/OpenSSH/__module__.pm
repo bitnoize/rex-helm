@@ -6,12 +6,17 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( openssh => @_ );
+  my ( $force ) = @_;
+
+  my $global = Rex::Malta::config( 'global' );
+  my $config = Rex::Malta::config( 'openssh' );
+
+  return unless $force or $config->{active};
 
   my $openssh = {
     active      => $config->{active}    // 0,
     restart     => $config->{restart}   // 1,
-    address     => $config->{address}   || [ '0.0.0.0' ],
+    address     => $config->{address}   || [ $global->{address} ],
     port        => $config->{port}      || 22,
     monit       => $config->{monit}     || { },
   };
@@ -51,7 +56,7 @@ task 'setup' => sub {
   service 'ssh', ensure => "started";
   service 'ssh' => "restart" if $openssh->{restart};
 
-  if ( is_installed "monit" ) {
+  if ( is_installed 'monit' ) {
     file "/etc/monit/conf-available/openssh", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.openssh" );

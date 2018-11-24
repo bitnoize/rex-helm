@@ -6,14 +6,18 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( dnsmasq => @_ );
+  my ( $force ) = @_;
+
+  my $global = Rex::Malta::config( 'global' );
+  my $config = Rex::Malta::config( 'dnsmasq' );
+
+  return unless $force or $config->{active};
 
   my $dnsmasq = {
     active      => $config->{active}    // 0,
     restart     => $config->{restart}   // 1,
-    resolver    => $config->{resolver}  // 1,
-    address     => $config->{address}   || [ "127.0.0.1" ],
     interface   => $config->{interface} || [ "lo" ],
+    address     => $config->{address}   || [ "127.0.0.1" ],
     port        => $config->{port}      || 53,
     upstream    => $config->{upstream}  || [ qw/8.8.8.8 8.8.4.4/ ],
     conf        => $config->{conf}      || { },
@@ -26,10 +30,6 @@ sub config {
   } @{ $dnsmasq->{address} };
 
   $dnsmasq->{nameserver} = [ @nameserver ];
-
-  $dnsmasq->{local} = [
-    map { join '#', $_, $dnsmasq->{port} } @{ $dnsmasq->{address} }
-  ];
 
   $dnsmasq->{monit}{enabled}  //= 0;
   $dnsmasq->{monit}{address}  ||= $dnsmasq->{address}[0];
@@ -73,13 +73,7 @@ task 'setup' => sub {
   service 'dnsmasq', ensure => "started";
   service 'dnsmasq' => "restart" if $dnsmasq->{restart};
 
-  if ( $dnsmasq->{resolver} ) {
-    file "/etc/resolv.conf", ensure => 'present',
-      owner => 'root', group => 'root', mode => 644,
-      content => template( "files/resolv.conf.dnsmasq" );
-  }
-
-  if ( is_installed "monit" ) {
+  if ( is_installed 'monit' ) {
     file "/etc/monit/conf-available/dnsmasq", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.dnsmasq" );

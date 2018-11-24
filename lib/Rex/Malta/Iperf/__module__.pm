@@ -6,20 +6,27 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( iperf => @_ );
+  my ( $force ) = @_;
+
+  my $global = Rex::Malta::config( 'global' );
+  my $config = Rex::Malta::config( 'iperf' );
+
+  return unless $force or $config->{active};
 
   my $iperf = {
     active      => $config->{active}    // 0,
     server      => $config->{server}    // 0,
     restart     => $config->{restart}   // 1,
-    address     => $config->{address}   || "127.0.0.1",
+    address     => $config->{address}   || [ $global->{address} ],
     port        => $config->{port}      || 5281,
     targets     => $config->{targets}   || [ ],
     monit       => $config->{monit}     || { },
   };
 
+  $iperf->{hostname} = $global->{hostname};
+
   $iperf->{monit}{enabled}  //= 0;
-  $iperf->{monit}{address}  ||= $iperf->{address};
+  $iperf->{monit}{address}  ||= $iperf->{address}[0];
   $iperf->{monit}{port}     ||= $iperf->{port};
   $iperf->{monit}{timeout}  ||= 10;
 
@@ -77,7 +84,7 @@ task 'setup' => sub {
     owner => 'root', group => 'root', mode => 755,
     content => template( "\@speedtest.run" );
 
-  if ( is_installed "monit" ) {
+  if ( is_installed 'monit' ) {
     file "/etc/monit/conf-available/iperf", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.iperf" );
@@ -150,8 +157,7 @@ task 'status' => sub {
 task 'fetch' => sub {
   my $iperf = config -force;
 
-  my %info = get_system_information;
-  my $save = "/tmp/iperf/$info{hostname}";
+  my $save = sprintf "/tmp/iperf/%s", $iperf->{hostname};
 
   LOCAL { rmdir $save; mkdir $save };
 

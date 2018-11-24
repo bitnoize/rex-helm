@@ -6,7 +6,12 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( rblcheck => @_ );
+  my ( $force ) = @_;
+
+  my $global = Rex::Malta::config( 'global' );
+  my $config = Rex::Malta::config( 'rblcheck' );
+
+  return unless $force or $config->{active};
 
   my $rblcheck = {
     active      => $config->{active}    // 0,
@@ -42,7 +47,7 @@ task 'setup' => sub {
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/rblcheck.conf.lists" );
 
-  if ( is_installed "monit" ) {
+  if ( is_installed 'monit' ) {
     file "/etc/monit/conf-available/rblcheck", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.rblcheck" );

@@ -6,12 +6,17 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( rsync => @_ );
+  my ( $force ) = @_;
+
+  my $global = Rex::Malta::config( 'global' );
+  my $config = Rex::Malta::config( 'rsync' );
+
+  return unless $force or $config->{active};
 
   my $rsync = {
     active      => $config->{active}    // 0,
     restart     => $config->{restart}   // 1,
-    address     => $config->{address}   || "127.0.0.1",
+    address     => $config->{address}   || [ "127.0.0.1" ],
     port        => $config->{port}      || 873,
     storage     => $config->{storage}   || "/var/www/stuff",
   };

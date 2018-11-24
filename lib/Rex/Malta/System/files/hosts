@@ -3,7 +3,7 @@
 
 # IPv4 capable hosts
 127.0.0.1       localhost
-<%= sprintf "%-15s", $address %> <%= $hostname %>
+<%= sprintf "%-15s", $system->{address} %> <%= $system->{hostname} %>
 
 # IPv6 capable hosts
 ::1     localhost ip6-localhost ip6-loopback

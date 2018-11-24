@@ -6,17 +6,18 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( system => @_ );
+  my ( $force ) = @_;
 
-  my %info = get_system_information;
+  my $global = Rex::Malta::config( 'global' );
+  my $config = Rex::Malta::config( 'system' );
+
+  return unless $force or $config->{active};
 
   my $system = {
     active      => $config->{active}    // 0,
     rootpw      => $config->{rootpw}    || "",
     grubcmd     => $config->{grubcmd}   || "",
     timezone    => $config->{timezone}  || "Etc/UTC",
-    sysctl      => $config->{sysctl}    || { },
-    release     => $config->{release}   || "unknown",
     kernver     => $config->{kernver}   || "",
     paranoid    => $config->{paranoid}  // 0,
     aptproxy    => $config->{aptproxy}  || "http://127.0.0.1:9080",
@@ -24,16 +25,21 @@ sub config {
     extradebs   => $config->{extradebs} // 0,
     extralink   => $config->{extralink} || "",
     packages    => $config->{packages}  || [ ],
+    sysctl      => $config->{sysctl}    || { },
     swapfile    => $config->{swapfile}  || "/swap",
     swapsize    => $config->{swapsize}  || "1024k"
   };
 
-  my @release =  qw/debian-jessie debian-stretch/;
+  $system->{hostname} = $global->{hostname};
+  die "Unknown system hostname\n" unless $system->{hostname};
 
-  die "Unknown system release\n"
+  $system->{release}  = $global->{release};
+  die "Unknown system release\n" unless $system->{release};
+
+  my @release = qw/debian-jessie debian-stretch kali-rolling/;
+
+  die "Invalid system release: '$system->{release}'\n"
     unless grep { $_ eq $system->{release} } @release;
-
-  $system->{hostname} = $info{hostname};
 
   inspect $system if Rex::Malta::DEBUG;
 
@@ -44,24 +50,26 @@ task 'stamp', sub {
   # Target hostname may be set wrong and cmdb doesn't attached
   # so do not use config in this task.
 
-  my $hostname  = param_lookup 'hostname';
-  my $address   = param_lookup 'address';
+  my $system = {
+    hostname  => param_lookup( 'hostname' ),
+    address   => param_lookup( 'address' ),
+  };
 
-  die "Specify --hostname and --address params\n" unless $hostname and $address;
+  die "Both of --hostname and --address are required\n"
+    unless $system->{hostname} and $system->{address};
 
-  inspect { hostname => $hostname, address => $address } if Rex::Malta::DEBUG;
+  inspect $system if Rex::Malta::DEBUG;
 
   file "/etc/hostname", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
-    content => $hostname,
-    on_change => sub {
-      run "hostname -F /etc/hostname"
-    };
+    content => $system->{hostname};
 
   file "/etc/hosts", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
-    content => template( "files/hosts",
-      hostname => $hostname, address => $address );
+    content => template( "files/hosts", system => $system );
+
+  run 'update_hostname', timeout => 10,
+    command => "hostname -F /etc/hostname";
 };
 
 task 'setup', sub {
@@ -100,33 +108,6 @@ task 'setup', sub {
   file "/etc/motd", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/motd", banner => $banner );
-
-  file "/etc/sysctl.conf", ensure => 'present',
-    owner => 'root', group => 'root', mode => 644,
-    content => template( "files/sysctl.conf" ),
-    on_change => sub {
-    };
-
-  symlink "/etc/sysctl.conf", "/etc/sysctl.d/99-sysctl.conf";
-
-  my $sysctl = $system->{sysctl};
-
-  for my $name ( keys %$sysctl ) {
-    my $enabled = $sysctl->{ $name };
-
-    if ( $enabled ) {
-      file "/etc/sysctl.d/$name.conf", ensure => 'present',
-        owner => 'root', group => 'root', mode => 644,
-        content => template( "files/sysctl.conf.$name" );
-    }
-
-    else {
-      unlink "/etc/sysctl.d/$name.conf";
-    }
-
-    run 'sysctl_reload', timeout => 10,
-      command => "sysctl --system";
-  }
 
   file "/etc/apt/apt.conf.d/10norecommends", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
@@ -232,29 +213,59 @@ task 'setup', sub {
     content => template( "files/sudoers" );
 
   rename "/etc/sudoers.new" => "/etc/sudoers";
+
+  file "/etc/sysctl.conf", ensure => 'present',
+    owner => 'root', group => 'root', mode => 644,
+    content => template( "files/sysctl.conf" ),
+    on_change => sub {
+    };
+
+  symlink "/etc/sysctl.conf", "/etc/sysctl.d/99-sysctl.conf";
+
+  my $sysctl = $system->{sysctl};
+
+  for my $name ( keys %$sysctl ) {
+    my $enabled = $sysctl->{ $name };
+
+    if ( $enabled ) {
+      file "/etc/sysctl.d/$name.conf", ensure => 'present',
+        owner => 'root', group => 'root', mode => 644,
+        content => template( "files/sysctl.conf.$name" );
+    }
+
+    else {
+      unlink "/etc/sysctl.d/$name.conf";
+    }
+
+    run 'sysctl_reload', timeout => 10,
+      command => "sysctl --system";
+  }
 };
 
 task 'clean' => sub {
-  return unless my $system = config;
+  my $system = config;
 
   file [
+    "/etc/default/rex",
+    "/etc/default/grub.ucf-dist",
+
     "/etc/apt/apt.conf.d/10norecommend",
     "/etc/apt/apt.conf.d/90extradebs",
   ], ensure => 'absent';
 };
 
 task 'remove' => sub {
-  my $system = config -force;
+  my $system = config;
 
 };
 
 task 'status' => sub {
-  my $system = config -force;
+  my $system = config;
 
 };
 
 task 'swapon' => sub {
-  return unless my $system = config;
+  my $system = config;
 
   append_if_no_such_line "/etc/fstab",
     line => "$system->{swapfile} none swap sw 0 0",
@@ -268,7 +279,7 @@ task 'swapon' => sub {
 };
 
 task 'swapoff' => sub {
-  return unless my $system = config;
+  my $system = config;
 
   delete_lines_matching "/etc/fstab",
     regexp => qr/$system->{swapfile}/;
@@ -281,7 +292,7 @@ task 'swapoff' => sub {
 };
 
 task 'sensors' => sub {
-  return unless my $system = config;
+  my $system = config;
 
   pkg [ qw/lm-sensors/ ], ensure => 'present';
 
@@ -319,17 +330,17 @@ rm -f <%= $system->{swapfile} %>
 @firsttime
 # There are a lot of shit on default Debian installation
 
-apt-get --purge remove \
+apt-get -y --purge remove \
   task-english task-ssh-server xauth rblcheck strace  \
   eject laptop-detect resolvconf vim-tiny netcat-traditional  \
   aptitude-doc-en apt-listchanges python-apt python-apt-common  \
   debconf-utils installation-report reportbug python-reportbug  \
   debian-faq doc-debian docutils-doc info install-info texinfo  \
   bc dc nano emacsen-common mutt gnupg2 w3m krb5-locales  \
-  nfs-common rpcbind host ftp telnet iproute tcpd \
+  nfs-common rpcbind host ftp telnet iproute tcpd python-debian \
   dictionaries-common iamerican ibritish ienglish-common wamerican  \
   exim4 exim4-base exim4-config exim4-daemon-light bsd-mailx procmail \
-  lockfile-progs rename xdg-user-dirs hicolor-icon-theme  \
+  lockfile-progs rename xdg-user-dirs hicolor-icon-theme \
   libcgi-fast-perl libcgi-pm-perl libfcgi-perl \
   libclass-accessor-perl libclass-c3-perl libclass-c3-xs-perl libclass-isa-perl \
   libalgorithm-c3-perl libdata-optlist-perl libdata-section-perl \
@@ -360,5 +371,6 @@ apt-get --purge remove \
   libencode-locale-perl \
   libcpan-meta-perl \
   libarchive-extract-perl
+
 @end
 

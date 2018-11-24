@@ -6,7 +6,12 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( cron => @_ );
+  my ( $force ) = @_;
+
+  my $config = Rex::Malta::config( 'cron' );
+  my $global = Rex::Malta::config( 'global' );
+
+  return unless $force or $config->{active};
 
   my $cron = {
     active      => $config->{active}    // 0,
@@ -79,7 +84,7 @@ task 'setup', sub {
   service 'cron', ensure => "started";
   service 'cron' => "restart" if $cron->{restart};
 
-  if ( is_installed "monit" ) {
+  if ( is_installed 'monit' ) {
     file "/etc/monit/conf-available/cron", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.cron" );
@@ -105,7 +110,7 @@ task 'clean' => sub {
 task 'remove' => sub {
   my $cron = config -force;
 
-  Rex::Logger::info( "Cron will NOT removed" => 'warn' );
+  # Do NOT remove cron
 };
 
 task 'status' => sub {

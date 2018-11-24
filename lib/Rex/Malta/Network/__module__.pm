@@ -6,7 +6,12 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( network => @_ );
+  my ( $force ) = @_;
+
+  my $global = Rex::Malta::config( 'global' );
+  my $config = Rex::Malta::config( 'network' );
+
+  return unless $force or $config->{active};
 
   my $network = {
     active      => $config->{active}    // 0,
@@ -27,16 +32,6 @@ task 'setup' => sub {
   pkg [
     qw/netbase ifupdown net-tools/
   ], ensure => "present";
-
-  if ( $network->{forward} ) {
-    file "/etc/sysctl.d/10-ip_forward.conf", ensure => 'present',
-      owner => 'root', group => 'root', mode => 644,
-      content => template( "files/sysctl.conf.10-ip_forward" ),
-      on_change => sub {
-        run 'sysctl_reload', timeout => 10,
-          command => "sysctl -p /etc/sysctl.d/10-ip_forward.conf";
-      };
-  }
 
   file "/etc/resolv.conf", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,

@@ -6,12 +6,17 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( mysql => @_ );
+  my ( $force ) = @_;
+
+  my $global = Rex::Malta::config( 'global' );
+  my $config = Rex::Malta::config( 'mysql' );
+
+  return unless $force or $config->{active};
 
   my $mysql = {
     active      => $config->{active}    // 0,
     restart     => $config->{restart}   // 1,
-    address     => $config->{address}   || "127.0.0.1",
+    address     => $config->{address}   || [ "127.0.0.1" ],
     port        => $config->{port}      || 3306,
     rootpw      => $config->{rootpw}    || "",
     conf        => $config->{conf}      || { },
@@ -72,13 +77,13 @@ task 'setup' => sub {
       command => "mysqladmin -u root password $rootpw";
   }
 
-  if ( is_installed "logrotate" ) {
+  if ( is_installed 'logrotate' ) {
     file "/etc/logrotate.d/mysql-server", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/logrotate.conf.mysql" )
   }
 
-  if ( is_installed "monit" ) {
+  if ( is_installed 'monit' ) {
     file "/etc/monit/conf-available/mysql", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.mysql" );

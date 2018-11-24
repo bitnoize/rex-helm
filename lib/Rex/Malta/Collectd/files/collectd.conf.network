@@ -2,15 +2,15 @@ LoadPlugin network
 
 <Plugin network>
 <% if ( $collectd->{server} ) { %>
-  <Listen "<%= $collectd->{address} %>" "<%= $collectd->{port} %>">
-    Interface "<%= $collectd->{interface} %>"
+  <Listen "<%= $collectd->{address}[0] %>" "<%= $collectd->{port} %>">
+    Interface "<%= $collectd->{interface}[0] %>"
     SecurityLevel "Encrypt"
     AuthFile "/etc/collectd/passwd"
   </Listen>
   MaxPacketSize 1452
 <% } else { %>
   <Server "<%= $collectd->{remote} %>" "<%= $collectd->{port} %>">
-    Interface "<%= $collectd->{interface} %>"
+    Interface "<%= $collectd->{interface}[0] %>"
     SecurityLevel "Encrypt"
     Username "<%= $collectd->{username} %>"
     Password "<%= $collectd->{password} %>"

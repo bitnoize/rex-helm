@@ -10,7 +10,12 @@ use constant ARCHIVE => "/tmp/mmonit-%s-%s.tar.gz";
 use constant SCRAPPY => "/tmp/mmonit-%s";
 
 sub config {
-  return unless my $config = Rex::Malta::config( mmonit => @_ );
+  my ( $force ) = @_;
+
+  my $global = Rex::Malta::config( 'global' );
+  my $config = Rex::Malta::config( 'mmonit' );
+
+  return unless $force or $config->{active};
 
   my $mmonit = {
     active      => $config->{active}    // 0,
@@ -18,7 +23,7 @@ sub config {
     platform    => $config->{platform}  || "linux-x64",
     version     => $config->{version}   || "3.7.1",
     workdir     => $config->{workdir}   || "/opt/mmonit",
-    address     => $config->{address}   || "0.0.0.0",
+    address     => $config->{address}   || [ $global->{address} ],
     port        => $config->{port}      || "3127",
     schema      => $config->{schema}    || "mysql://monit:monit\@127.0.0.1/mmonit",
     owner       => $config->{owner}     || "Unknown",

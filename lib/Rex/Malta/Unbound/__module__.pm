@@ -6,12 +6,16 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( unbound => @_ );
+  my ( $force ) = @_;
+
+  my $global = Rex::Malta::config( 'global' );
+  my $config = Rex::Malta::config( 'unbound' );
+
+  return unless $force or $config->{active};
 
   my $unbound = {
     active      => $config->{active}    // 0,
     restart     => $config->{restart}   // 1,
-    resolver    => $config->{resolver}  // 0,
     address     => $config->{address}   || [ "127.0.0.1" ],
     port        => $config->{port}      || 53,
     allowed     => $config->{allowed}   || [ "127.0.0.0/8" ],
@@ -68,13 +72,7 @@ task 'setup' => sub {
   service 'unbound', ensure => "started";
   service 'unbound' => "restart" if $unbound->{restart};
 
-  if ( $unbound->{resolver} ) {
-    file "/etc/resolv.conf", ensure => 'present',
-      owner => 'root', group => 'root', mode => 644,
-      content => template( "files/resolv.conf.unbound" );
-  }
-
-  if ( is_installed "monit" ) {
+  if ( is_installed 'monit' ) {
     file "/etc/monit/conf-available/unbound", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.unbound" );

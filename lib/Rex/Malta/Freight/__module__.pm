@@ -6,7 +6,12 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( freight => @_ );
+  my ( $force ) = @_;
+
+  my $global = Rex::Malta::config( 'global' );
+  my $config = Rex::Malta::config( 'freight' );
+
+  return unless $force or $config->{active};
 
   my $freight = {
     active      => $config->{active}    // 0,

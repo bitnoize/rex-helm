@@ -6,7 +6,12 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( collectd => @_ );
+  my ( $force ) = @_;
+
+  my $global = Rex::Malta::config( 'global' );
+  my $config = Rex::Malta::config( 'collectd' );
+
+  return unless $force or $config->{active};
 
   my $collectd = {
     active      => $config->{active}    // 0,
@@ -14,9 +19,9 @@ sub config {
     server      => $config->{server}    // 0,
     interval    => $config->{interval}  || 60,
     remote      => $config->{remote}    || "graph.test.net",
-    address     => $config->{address}   || "0.0.0.0",
+    interface   => $config->{interface} || [ $global->{interface} ],
+    address     => $config->{address}   || [ $global->{address} ],
     port        => $config->{port}      || 25826,
-    interface   => $config->{interface} || "eth0",
     username    => $config->{username}  || "stats",
     password    => $config->{password}  || "secret",
     confs       => $config->{confs}     || { },
@@ -29,6 +34,9 @@ sub config {
 
 task 'setup' => sub {
   return unless my $collectd = config;
+
+  my $collectd = config;
+  return unless $collectd->{active};
 
   pkg [ qw/collectd libmnl0/ ], ensure => 'present';
 

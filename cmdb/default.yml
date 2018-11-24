@@ -2,13 +2,18 @@
 # Configuration defaults
 #
 
+global:
+  service:      ~
+  machine:      ~
+  hostname:     ~
+  address:      ~
+  release:      ~
+  
 system:
   active:       1
 # rootpw:       ''
   grubcmd:      'quiet nomodeset net.ifnames=0 biosdevname=0'
 # timezone:     Etc/UTC
-# sysctl:       { }
-# release:      unknown
 # kernver:      ''
 # paranoid:     0
 # aptproxy:     http://127.0.0.1:9080
@@ -16,12 +21,12 @@ system:
 # extradebs:    0
 # extralink:    http://debs.test.net
 # packages:     [ ]
+# sysctl:       { }
 # swapfile:     /swap
 # swapdize:     1024k
 
 network:
   active:       1
-# forward:      0
 # resolver:     [ 8.8.8.8, 8.8.4.4 ]
 # ethernet:     { }
 # bridge:       { }
@@ -30,6 +35,7 @@ firewall:
   active:       1
 # type:         none
 # restart:      1
+# term:         { }
 
 shaper:
   active:       0
@@ -41,7 +47,7 @@ shaper:
 monit:
   active:       1
 # restart:      1
-# address:      127.0.0.1
+# address:      [ 0.0.0.0 ]
 # port:         2812
 # auth:         monit:secret
 # mmonit:       "https://monit:secret\@monit.test.net:3127/collector"
@@ -58,9 +64,9 @@ collectd:
 # server:       0
 # interval:     60
 # remote:       graph.test.net
-# address:      0.0.0.0
+# address:      [ 0.0.0.0 ]
 # port:         25826
-# interface:    eth0
+# interface:    [ eth0 ]
 # username:     stats
 # password:     'secret'
   confs:
@@ -133,7 +139,7 @@ iperf:
   active:       0
 # restart:      1
 # server:       0
-# address:      0.0.0.0
+# address:      [ 0.0.0.0 ]
 # port:         5281
 # targets:      [ ]
   monit:
@@ -151,7 +157,6 @@ qemukvm:
 dnsmasq:
   active:       0
 # restart:      1
-# resolver:     1
 # address:      [ 127.0.0.1 ]
 # interface:    [ lo ]
 # port:         53
@@ -166,7 +171,6 @@ dnsmasq:
 unbound:
   active:       0
 # restart:      1
-# resolver:     0
 # address:      [ 127.0.0.1 ]
 # port:         53
 # allowed:      [ 127.0.0.1/8 ]
@@ -176,7 +180,7 @@ unbound:
 
   monit:
     enabled:      1
-#   address:      127.0.0.1
+#   address:      [ 127.0.0.1 ]
 #   port:         53
 #   timeout:      10
 
@@ -208,7 +212,7 @@ nginx:
 mysql:
   active:       0
 # restart:      1
-# address:      127.0.0.1
+# address:      [ 127.0.0.1 ]
 # port:         3306
 # rootpw:       'secret'
 # conf:         { }
@@ -247,7 +251,7 @@ mmonit:
 # version:      3.7.1
 # platform:     linux-x64
 # path:         /opt/mmonit
-# address:      0.0.0.0
+# address:      [ 0.0.0.0 ]
 # port:         3127
 # schema:       mysql://monit:monit@127.0.0.1/mmonit
 # owner:        Unknown
@@ -256,7 +260,7 @@ mmonit:
 rsync:
   active:       0
 # restart:      1
-# address:      127.0.0.1
+# address:      [ 127.0.0.1 ]
 # port:         873
 # storage:      /var/www/stuff
 

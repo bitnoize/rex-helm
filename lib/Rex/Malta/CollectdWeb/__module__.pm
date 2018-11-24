@@ -7,14 +7,17 @@ use Rex -feature => [ '1.4' ];
 
 use Rex::Commands::SCM;
 
-use constant DISTRIB => "https://github.com/httpdss/collectd-web.git";
-
 sub config {
-  return unless my $config = Rex::Malta::config( collectdweb => @_ );
+  my ( $force ) = @_;
+
+  my $global = Rex::Malta::config( 'global' );
+  my $config = Rex::Malta::config( 'collectdweb' );
+
+  return unless $force or $config->{active};
 
   my $collectdweb = {
     active      => $config->{active}  // 0,
-    distrib     => $config->{distrib} || DISTRIB,
+    distrib     => $config->{distrib} || "https://github.com/httpdss/collectd-web.git",
     workdir     => $config->{workdir} || "/var/www/collectd-web",
   };
 

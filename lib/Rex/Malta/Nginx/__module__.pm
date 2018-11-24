@@ -6,7 +6,12 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( nginx => @_ );
+  my ( $force ) = @_;
+
+  my $global = Rex::Malta::config( 'global' );
+  my $config = Rex::Malta::config( 'nginx' );
+
+  return unless $force or $config->{active};
 
   my $nginx = {
     active      => $config->{active}    // 0,
@@ -144,13 +149,13 @@ task 'setup' => sub {
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/nginx.index.html" );
 
-  if ( is_installed "logrotate" ) {
+  if ( is_installed 'logrotate' ) {
     file "/etc/logrotate.d/nginx", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/logrotate.conf.nginx" );
   }
 
-  if ( is_installed "monit" ) {
+  if ( is_installed 'monit' ) {
     file "/etc/monit/conf-available/nginx", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.nginx" );

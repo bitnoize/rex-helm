@@ -6,7 +6,12 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( ntp => @_ );
+  my ( $force ) = @_;
+
+  my $global = Rex::Malta::config( 'global' );
+  my $config = Rex::Malta::config( 'ntp' );
+
+  return unless $force or $config->{active};
 
   my $ntp = {
     active      => $config->{active}    // 0,
@@ -37,7 +42,7 @@ task 'setup' => sub {
   service 'ntp', ensure => 'started';
   service 'ntp' => "restart" if $ntp->{restart};
 
-  if ( is_installed "monit" ) {
+  if ( is_installed 'monit' ) {
     file "/etc/monit/conf-available/ntp", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.ntp" );

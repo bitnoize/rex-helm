@@ -6,12 +6,17 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( monit => @_ );
+  my ( $force ) = @_;
+
+  my $global = Rex::Malta::config( 'global' );
+  my $config = Rex::Malta::config( 'monit' );
+
+  return unless $force or $config->{active};
 
   my $monit = {
     active      => $config->{active}  // 0,
     restart     => $config->{restart} // 1,
-    address     => $config->{address} || "0.0.0.0",
+    address     => $config->{address} || [ $global->{address} ],
     port        => $config->{port}    || 2812,
     auth        => $config->{auth}    || "monit:secret",
     mmonit      => $config->{mmonit}  ||
@@ -83,7 +88,7 @@ task 'setup' => sub {
   service 'monit', ensure => "started";
   service 'monit' => "restart" if $monit->{restart};
 
-  if ( is_installed "logrotate" ) {
+  if ( is_installed 'logrotate' ) {
     file "/etc/logrotate.d/monit", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/logrotate.conf.monit" );

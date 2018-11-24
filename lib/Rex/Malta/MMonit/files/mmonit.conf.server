@@ -2,7 +2,7 @@
 <Server>
    <Service>
        <!-- Define a SSL/TLS HTTP/1.1 Connector on port 8443 -->
-       <Connector address="<%= $mmonit->{address} %>" port="<%= $mmonit->{port} %>" processors="10" secure="true" />
+       <Connector address="<%= $mmonit->{address}[0] %>" port="<%= $mmonit->{port} %>" processors="10" secure="true" />
        
        <Engine name="mmonit" defaultHost="localhost" fileCache="10MB">
 
@@ -27,7 +27,7 @@
 
            <ErrorLogger directory="logs" fileName="error.log" rotate="week" />
 
-           <Host name="localhost" appBase="." address="<%= $mmonit->{address} %>" certificate="<%= $mmonit->{cert} %>">
+           <Host name="localhost" appBase="." address="<%= $mmonit->{address}[0] %>" certificate="<%= $mmonit->{cert} %>">
 
                <!--
                <AccessLogger directory="logs" fileName="localhost_access.log" rotate="week" />
