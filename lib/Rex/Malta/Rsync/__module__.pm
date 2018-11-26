@@ -6,12 +6,7 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  my ( $force ) = @_;
-
-  my $global = Rex::Malta::config( 'global' );
-  my $config = Rex::Malta::config( 'rsync' );
-
-  return unless $force or $config->{active};
+  return unless my $config = Rex::Malta::config( rsync => @_ );
 
   my $rsync = {
     active      => $config->{active}    // 0,
@@ -20,6 +15,11 @@ sub config {
     port        => $config->{port}      || 873,
     storage     => $config->{storage}   || "/var/www/stuff",
   };
+
+  $rsync->{monit}{enabled}  //= 0;
+  $rsync->{monit}{address}  ||= $rsync->{address}[0];
+  $rsync->{monit}{port}     ||= $rsync->{port};
+  $rsync->{monit}{timeout}  ||= 10;
 
   inspect $rsync if Rex::Malta::DEBUG;
 

@@ -6,12 +6,7 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  my ( $force ) = @_;
-
-  my $global = Rex::Malta::config( 'global' );
-  my $config = Rex::Malta::config( 'mysql' );
-
-  return unless $force or $config->{active};
+  return unless my $config = Rex::Malta::config( mysql => @_ );
 
   my $mysql = {
     active      => $config->{active}    // 0,
@@ -77,6 +72,10 @@ task 'setup' => sub {
       command => "mysqladmin -u root password $rootpw";
   }
 
+  else {
+    Rex::Logger::info( "MySQL root password does not set" => 'warn' );
+  }
+
   if ( is_installed 'logrotate' ) {
     file "/etc/logrotate.d/mysql-server", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
@@ -113,7 +112,7 @@ task 'remove' => sub {
     qw/mysql-server mysql-client/
   ], ensure => 'absent';
 
-  Rex::Logger::info( "MySQL datadir will not removed" => 'warn' );
+  # MySQL datadir will not removed
 
   file [
     "/etc/default/mysql",

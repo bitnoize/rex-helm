@@ -11,12 +11,10 @@ sub config {
   my $shaper = {
     active      => $config->{active}  // 0,
     ifb         => $config->{ifb}     // 1,
-    link        => $config->{link}    // [ qw/100Mbit 100Mbit/ ],
-    base        => $config->{base}    // [ qw/ 10Mbit  95Mbit/ ],
-    misc        => $config->{misc}    // [ qw/  5Mbit  10Mbit/ ]
+    link        => $config->{link}    || [ qw/100Mbit 100Mbit/ ],
+    base        => $config->{base}    || [ qw/ 10Mbit  95Mbit/ ],
+    misc        => $config->{misc}    || [ qw/  5Mbit  10Mbit/ ]
   };
-
-  $shaper->{active} = $config->{active};
 
   inspect $shaper if Rex::Malta::DEBUG;
 

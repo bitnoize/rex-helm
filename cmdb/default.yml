@@ -2,18 +2,17 @@
 # Configuration defaults
 #
 
-global:
+inventory:
+  hostname:     ~
   service:      ~
   machine:      ~
-  hostname:     ~
-  address:      ~
-  release:      ~
   
 system:
   active:       1
 # rootpw:       ''
   grubcmd:      'quiet nomodeset net.ifnames=0 biosdevname=0'
 # timezone:     Etc/UTC
+# release:      unknown
 # kernver:      ''
 # paranoid:     0
 # aptproxy:     http://127.0.0.1:9080

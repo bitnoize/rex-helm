@@ -6,12 +6,7 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  my ( $force ) = @_;
-
-  my $config = Rex::Malta::config( 'cron' );
-  my $global = Rex::Malta::config( 'global' );
-
-  return unless $force or $config->{active};
+  return unless my $config = Rex::Malta::config( cron => @_ );
 
   my $cron = {
     active      => $config->{active}    // 0,

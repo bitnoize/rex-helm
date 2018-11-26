@@ -6,12 +6,7 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  my ( $force ) = @_;
-
-  my $global = Rex::Malta::config( 'global' );
-  my $config = Rex::Malta::config( 'unbound' );
-
-  return unless $force or $config->{active};
+  return unless my $config = Rex::Malta::config( unbound => @_ );
 
   my $unbound = {
     active      => $config->{active}    // 0,

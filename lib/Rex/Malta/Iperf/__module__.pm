@@ -6,24 +6,17 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  my ( $force ) = @_;
-
-  my $global = Rex::Malta::config( 'global' );
-  my $config = Rex::Malta::config( 'iperf' );
-
-  return unless $force or $config->{active};
+  return unless my $config = Rex::Malta::config( iperf => @_ );
 
   my $iperf = {
     active      => $config->{active}    // 0,
     server      => $config->{server}    // 0,
     restart     => $config->{restart}   // 1,
-    address     => $config->{address}   || [ $global->{address} ],
+    address     => $config->{address}   || [ "127.0.0.1" ],
     port        => $config->{port}      || 5281,
     targets     => $config->{targets}   || [ ],
     monit       => $config->{monit}     || { },
   };
-
-  $iperf->{hostname} = $global->{hostname};
 
   $iperf->{monit}{enabled}  //= 0;
   $iperf->{monit}{address}  ||= $iperf->{address}[0];
@@ -157,7 +150,7 @@ task 'status' => sub {
 task 'fetch' => sub {
   my $iperf = config -force;
 
-  my $save = sprintf "/tmp/iperf/%s", $iperf->{hostname};
+  my $save = "/tmp/iperf";
 
   LOCAL { rmdir $save; mkdir $save };
 

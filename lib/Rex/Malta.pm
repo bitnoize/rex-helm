@@ -13,7 +13,7 @@ $modules = [ ] unless ref $modules eq 'ARRAY';
 include map { "Rex::Malta::$_" } @$modules;
 
 sub config {
-  my ( $category ) = @_;
+  my ( $category, $force ) = @_;
 
   die "Unknown config category" unless $category;
 
@@ -23,7 +23,7 @@ sub config {
   my $config = param_lookup $category, { };
   $config = { } unless ref $config eq 'HASH';
 
-  return $config;
+  ( $config->{active} || $force ) ? $config : undef;
 }
 
 sub process {

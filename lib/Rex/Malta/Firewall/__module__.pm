@@ -6,18 +6,13 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  my ( $force ) = @_;
-
-  my $global = Rex::Malta::config( 'global' );
-  my $config = Rex::Malta::config( 'firewall' );
-
-  return unless $force or $config->{active};
+  return unless my $config = Rex::Malta::config( firewall => @_ );
 
   my $firewall = {
-    active      => $config->{active}  // 0,
-    restart     => $config->{restart} // 1,
-    type        => $config->{type}    || 'none',
-    term        => $config->{term}    || { },
+    active      => $config->{active}    // 0,
+    restart     => $config->{restart}   // 1,
+    type        => $config->{type}      || 'none',
+    variable    => $config->{variable}  || { },
   };
 
   inspect $firewall if Rex::Malta::DEBUG;

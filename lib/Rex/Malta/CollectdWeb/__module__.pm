@@ -8,12 +8,7 @@ use Rex -feature => [ '1.4' ];
 use Rex::Commands::SCM;
 
 sub config {
-  my ( $force ) = @_;
-
-  my $global = Rex::Malta::config( 'global' );
-  my $config = Rex::Malta::config( 'collectdweb' );
-
-  return unless $force or $config->{active};
+  return unless my $config = Rex::Malta::config( collectdweb => @_ );
 
   my $collectdweb = {
     active      => $config->{active}  // 0,

@@ -6,18 +6,16 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  my ( $force ) = @_;
+  return unless my $config = Rex::Malta::config( system => @_ );
 
-  my $global = Rex::Malta::config( 'global' );
-  my $config = Rex::Malta::config( 'system' );
-
-  return unless $force or $config->{active};
+  my %info = get_system_information;
 
   my $system = {
     active      => $config->{active}    // 0,
     rootpw      => $config->{rootpw}    || "",
     grubcmd     => $config->{grubcmd}   || "",
     timezone    => $config->{timezone}  || "Etc/UTC",
+    release     => $config->{release}   || "unknown",
     kernver     => $config->{kernver}   || "",
     paranoid    => $config->{paranoid}  // 0,
     aptproxy    => $config->{aptproxy}  || "http://127.0.0.1:9080",
@@ -30,11 +28,7 @@ sub config {
     swapsize    => $config->{swapsize}  || "1024k"
   };
 
-  $system->{hostname} = $global->{hostname};
-  die "Unknown system hostname\n" unless $system->{hostname};
-
-  $system->{release}  = $global->{release};
-  die "Unknown system release\n" unless $system->{release};
+  $system->{hostname} = $info{hostname};
 
   my @release = qw/debian-jessie debian-stretch kali-rolling/;
 
