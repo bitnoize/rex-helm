@@ -20,7 +20,11 @@ system:
 # extradebs:    0
 # extralink:    http://debs.test.net
 # packages:     [ ]
-# sysctl:       { }
+  sysctl:
+    15-ip_forward:      0
+    25-route_localnet:  0
+    95-disable_ipv6:    0
+
 # swapfile:     /swap
 # swapdize:     1024k
 
