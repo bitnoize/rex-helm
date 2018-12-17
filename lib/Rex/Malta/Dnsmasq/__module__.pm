@@ -10,14 +10,18 @@ sub config {
 
   my $dnsmasq = {
     active      => $config->{active}    // 0,
-    restart     => $config->{restart}   // 1,
-    interface   => $config->{interface} || [ "lo" ],
-    address     => $config->{address}   || [ "127.0.0.1" ],
+    interface   => $config->{interface} || "lo",
+    address     => $config->{address}   || "127.0.0.1",
     port        => $config->{port}      || 53,
     upstream    => $config->{upstream}  || [ qw/8.8.8.8 8.8.4.4/ ],
     conf        => $config->{conf}      || { },
     monit       => $config->{monit}     || { },
   };
+
+  for ( qw/interface address upstream/ ) {
+    $dnsmasq->{ $_ } = [ $dnsmasq->{ $_ } ]
+      unless ref $dnsmasq->{ $_ } eq 'ARRAY';
+  }
 
   my @nameserver = map {
     # Add port number only if non standart one
@@ -65,8 +69,8 @@ task 'setup' => sub {
     }
   }
 
-  service 'dnsmasq', ensure => "started";
-  service 'dnsmasq' => "restart" if $dnsmasq->{restart};
+  service 'dnsmasq', ensure => 'started';
+  service 'dnsmasq' => 'restart';
 
   if ( is_installed 'monit' ) {
     file "/etc/monit/conf-available/dnsmasq", ensure => 'present',
@@ -82,7 +86,7 @@ task 'setup' => sub {
       unlink "/etc/monit/conf-enabled/dnsmasq";
     }
 
-    service 'monit' => "restart" if $dnsmasq->{restart};
+    service 'monit' => 'restart';
   }
 };
 
@@ -94,15 +98,22 @@ task 'clean' => sub {
 task 'remove' => sub {
   my $dnsmasq = config -force;
 
-  pkg [ qw/dnsmasq/ ], ensure => "absent";
+  pkg [ qw/dnsmasq/ ], ensure => 'absent';
 
   file [
     "/etc/default/dnsmasq",
     "/etc/dnsmasq.conf",
     "/etc/dnsmasq.d",
-    "/etc/monit/conf-available/dnsmasq",
-    "/etc/monit/conf-enabled/dnsmasq",
   ], ensure => 'absent';
+
+  if ( is_installed 'monit' ) {
+    file [
+      "/etc/monit/conf-available/dnsmasq",
+      "/etc/monit/conf-enabled/dnsmasq",
+    ], ensure => 'absent';
+
+    service 'monit' => 'restart';
+  }
 };
 
 task 'status' => sub {

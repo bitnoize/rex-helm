@@ -10,7 +10,6 @@ sub config {
 
   my $firewall = {
     active      => $config->{active}    // 0,
-    restart     => $config->{restart}   // 1,
     type        => $config->{type}      || 'none',
     variable    => $config->{variable}  || { },
   };
@@ -42,8 +41,8 @@ task 'setup' => sub {
         owner => 'root', group => 'root', mode => 640,
         content => template( "files/iptables.rules.v6" );
 
-      service 'netfilter-persistent', ensure => "started";
-      service 'netfilter-persistent' => "restart" if $firewall->{restart};
+      service 'netfilter-persistent', ensure => 'started';
+      service 'netfilter-persistent' => 'restart';
     },
 
     'ferm' => sub {
@@ -60,8 +59,8 @@ task 'setup' => sub {
         owner => 'root', group => 'adm', mode => 640,
         content => template( "files/ferm.conf" );
 
-      service 'ferm', ensure => "started";
-      service 'ferm' => "restart" if $firewall->{restart};
+      service 'ferm', ensure => 'started';
+      service 'ferm' => 'restart';
     },
 
     default => sub {

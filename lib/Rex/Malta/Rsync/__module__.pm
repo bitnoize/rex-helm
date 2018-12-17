@@ -10,11 +10,13 @@ sub config {
 
   my $rsync = {
     active      => $config->{active}    // 0,
-    restart     => $config->{restart}   // 1,
-    address     => $config->{address}   || [ "127.0.0.1" ],
+    address     => $config->{address}   || "127.0.0.1",
     port        => $config->{port}      || 873,
     storage     => $config->{storage}   || "/var/www/stuff",
   };
+
+  $rsync->{address} = [ $rsync->{address} ]
+    unless ref $rsync->{address} eq 'ARRAY';
 
   $rsync->{monit}{enabled}  //= 0;
   $rsync->{monit}{address}  ||= $rsync->{address}[0];
@@ -42,8 +44,8 @@ task 'setup' => sub {
   file $rsync->{storage}, ensure => 'directory',
     owner => 'root', group => 'root', mode => 755;
 
-  service 'rsync', ensure => "started";
-  service 'rsync' => "restart" if $rsync->{restart};
+  service 'rsync', ensure => 'started';
+  service 'rsync' => 'restart';
 };
 
 task 'clean' => sub {

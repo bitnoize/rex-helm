@@ -11,12 +11,14 @@ sub config {
   my $iperf = {
     active      => $config->{active}    // 0,
     server      => $config->{server}    // 0,
-    restart     => $config->{restart}   // 1,
-    address     => $config->{address}   || [ "127.0.0.1" ],
+    address     => $config->{address}   || "127.0.0.1",
     port        => $config->{port}      || 5281,
     targets     => $config->{targets}   || [ ],
     monit       => $config->{monit}     || { },
   };
+
+  $iperf->{address} = [ $iperf->{address} ]
+    unless ref $iperf->{address} eq 'ARRAY';
 
   $iperf->{monit}{enabled}  //= 0;
   $iperf->{monit}{address}  ||= $iperf->{address}[0];
@@ -49,12 +51,12 @@ task 'setup' => sub {
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/iperf.service" ),
       on_change => sub {
-        run 'systemd_restart', timeout => 10,
+        run 'systemd_daemon_reload', timeout => 10,
           command => "systemctl daemon-reload";
       };
 
-    service 'iperf', ensure => "started";
-    service 'iperf' => "restart" if $iperf->{restart};
+    service 'iperf', ensure => 'started';
+    service 'iperf' => 'restart';
 
     Rex::Logger::info( "Iperf configured as server" => 'info' );
   }
@@ -65,7 +67,7 @@ task 'setup' => sub {
       "/etc/systemd/system/iperf.service",
     ], ensure => 'absent';
 
-    run 'systemd_restart', timeout => 10,
+    run 'systemd_daemon_reload', timeout => 10,
       command => "systemctl daemon-reload";
   }
 
@@ -91,7 +93,7 @@ task 'setup' => sub {
       unlink "/etc/monit/conf-enabled/iperf";
     }
 
-    service 'monit' => "restart" if $iperf->{restart};
+    service 'monit' => 'restart';
   }
 };
 
@@ -113,12 +115,19 @@ task 'remove' => sub {
     "/etc/systemd/system/iperf.service",
     "/usr/local/bin/speedtest",
     "/usr/local/bin/speedtest.run",
-    "/etc/monit/conf-available/iperf",
-    "/etc/monit/conf-enabled/iperf",
   ], ensure => 'absent';
 
-  run 'systemd_restart', timeout => 10,
+  run 'systemd_daemon_reload', timeout => 10,
     command => "systemctl daemon-reload";
+
+  if ( is_installed 'monit' ) {
+    file [
+      "/etc/monit/conf-available/iperf",
+      "/etc/monit/conf-enabled/iperf",
+    ], ensure => 'absent';
+
+    service 'monit' => 'restart';
+  }
 };
 
 task 'speedtest' => sub {

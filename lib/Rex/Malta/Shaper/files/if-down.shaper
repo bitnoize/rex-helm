@@ -3,6 +3,9 @@
 # Only ethX and ifbX interfaces acceptable
 [[ "$IFACE" =~ ^(eth|ifb)[0-9]$ ]] || exit 0
 
+# Check shaper exists
+[ -e "/run/network/shaper.$IFACE" ] || exit 0
+
 # Remove all interface disciplines
 /sbin/tc qdisc del dev $IFACE root
 
@@ -10,6 +13,6 @@ if [[ "$IFACE" =~ ^eth ]]; then
   /sbin/tc qdisc del dev $IFACE ingress
 fi
 
-rm -f /run/network/shaper-*.$IFACE
+rm -f /run/network/shaper.$IFACE
 
 exit 0

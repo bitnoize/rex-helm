@@ -10,7 +10,6 @@ sub config {
 
   my $postfix = {
     active      => $config->{active}    // 0,
-    restart     => $config->{restart}   // 1,
     monit       => $config->{monit}     || { },
   };
 
@@ -31,8 +30,8 @@ task 'setup' => sub {
 
   Rex::Logger::info( "There is no Postfix configuration yet" => 'warn' );
 
-  service 'postfix', ensure => "started";
-  service 'postfix' => "restart" if $postfix->{restart};
+  service 'postfix', ensure => 'started';
+  service 'postfix' => 'restart';
 };
 
 task 'clean' => sub {

@@ -10,13 +10,15 @@ sub config {
 
   my $mysql = {
     active      => $config->{active}    // 0,
-    restart     => $config->{restart}   // 1,
-    address     => $config->{address}   || [ "127.0.0.1" ],
+    address     => $config->{address}   || "127.0.0.1",
     port        => $config->{port}      || 3306,
     rootpw      => $config->{rootpw}    || "",
     conf        => $config->{conf}      || { },
     monit       => $config->{monit}     || { },
   };
+
+  $mysql->{address} = [ $mysql->{address} ]
+    unless ref $mysql->{address} eq 'ARRAY';
 
   $mysql->{monit}{enabled}  //= 0;
 
@@ -61,8 +63,8 @@ task 'setup' => sub {
     }
   }
 
-  service 'mysql', ensure => "started";
-  service 'mysql' => "restart" if $mysql->{restart};
+  service 'mysql', ensure => 'started';
+  service 'mysql' => 'restart';
 
   my $rootpw = $mysql->{rootpw};
 
@@ -96,7 +98,7 @@ task 'setup' => sub {
       unlink "/etc/monit/conf-enabled/mysql";
     }
 
-    service 'monit' => "restart" if $mysql->{restart};
+    service 'monit' => 'restart';
   }
 };
 
@@ -121,6 +123,21 @@ task 'remove' => sub {
     "/etc/monit/conf-available/mysql",
     "/etc/monit/conf-enabled/mysql",
   ], ensure => 'absent';
+
+  if ( is_installed 'logrotate' ) {
+    file [
+      "/etc/logrotate.d/mysql-server",
+    ], ensure => 'absent';
+  }
+
+  if ( is_installed 'monit' ) {
+    file [
+      "/etc/monit/conf-available/mysql",
+      "/etc/monit/conf-enabled/mysql",
+    ], ensure => 'absent';
+
+    service 'monit' => 'restart';
+  }
 };
 
 task 'status' => sub {

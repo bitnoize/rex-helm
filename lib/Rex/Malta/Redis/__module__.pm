@@ -10,7 +10,6 @@ sub config {
 
   my $redis = {
     active      => $config->{active}    // 0,
-    restart     => $config->{restart}   // 1,
     address     => $config->{address}   || [ "127.0.0.1" ],
     port        => $config->{port}      || 6379,
     monit       => $config->{monit}     || { },
@@ -43,8 +42,8 @@ task 'setup' => sub {
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/redis.conf" );
 
-  service 'redis', ensure => "started";
-  service 'redis' => "restart" if $redis->{restart};
+  service 'redis', ensure => 'started';
+  service 'redis' => 'restart';
 
   if ( is_installed 'logrotate' ) {
     file "/etc/logrotate.d/redis-server", ensure => 'present',
@@ -66,7 +65,7 @@ task 'setup' => sub {
       unlink "/etc/monit/conf-enabled/redis";
     }
 
-    service 'monit' => "restart" if $redis->{restart};
+    service 'monit' => 'restart';
   }
 };
 
@@ -87,10 +86,22 @@ task 'remove' => sub {
   file [
     "/etc/default/redis-server",
     "/etc/redis",
-    "/etc/logrotate.d/redis-server",
-    "/etc/monit/conf-available/redis",
-    "/etc/monit/conf-enabled/redis",
   ], ensure => 'absent';
+
+  if ( is_installed 'logrotate' ) {
+    file [
+      "/etc/logrotate.d/redis-server",
+    ], ensure => 'absent';
+  }
+
+  if ( is_installed 'monit' ) {
+    file [
+      "/etc/monit/conf-available/redis",
+      "/etc/monit/conf-enabled/redis",
+    ], ensure => 'absent';
+
+    service 'monit' => 'restart';
+  }
 };
 
 task 'status' => sub {

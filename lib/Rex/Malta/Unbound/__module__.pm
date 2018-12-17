@@ -10,13 +10,17 @@ sub config {
 
   my $unbound = {
     active      => $config->{active}    // 0,
-    restart     => $config->{restart}   // 1,
-    address     => $config->{address}   || [ "127.0.0.1" ],
+    address     => $config->{address}   || "127.0.0.1",
     port        => $config->{port}      || 53,
-    allowed     => $config->{allowed}   || [ "127.0.0.0/8" ],
+    allowed     => $config->{allowed}   || "127.0.0.0/8",
     conf        => $config->{conf}      || { },
     monit       => $config->{monit}     || { },
   };
+
+  for ( qw/address allowed/ ) {
+    $unbound->{ $_ } = [ $unbound->{ $_ } ]
+      unless ref $unbound->{ $_ } eq 'ARRAY';
+  }
 
   my @nameserver = map {
     # Add port number only if non standart one
@@ -64,8 +68,8 @@ task 'setup' => sub {
     }
   }
 
-  service 'unbound', ensure => "started";
-  service 'unbound' => "restart" if $unbound->{restart};
+  service 'unbound', ensure => 'started';
+  service 'unbound' => 'restart';
 
   if ( is_installed 'monit' ) {
     file "/etc/monit/conf-available/unbound", ensure => 'present',
@@ -81,7 +85,7 @@ task 'setup' => sub {
       unlink "/etc/monit/conf-enabled/unbound";
     }
   
-    service 'monit' => "restart" if $unbound->{restart};
+    service 'monit' => 'restart';
   }
 };
 
@@ -100,9 +104,16 @@ task 'remove' => sub {
     "/etc/default/unbound",
     "/etc/unbound",
     "/var/lib/unbound",
-    "/etc/monit/conf-available/unbound",
-    "/etc/monit/conf-enabled/unbound",
   ], ensure => 'absent';
+
+  if ( is_installed 'monit' ) {
+    file [
+      "/etc/monit/conf-available/unbound",
+      "/etc/monit/conf-enabled/unbound",
+    ], ensure => 'absent';
+
+    service 'monit' => 'restart';
+  }
 };
 
 task 'status' => sub {

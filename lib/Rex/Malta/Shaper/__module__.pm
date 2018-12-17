@@ -13,7 +13,7 @@ sub config {
     ifb         => $config->{ifb}     // 1,
     link        => $config->{link}    || [ qw/100Mbit 100Mbit/ ],
     base        => $config->{base}    || [ qw/ 10Mbit  95Mbit/ ],
-    misc        => $config->{misc}    || [ qw/  5Mbit  10Mbit/ ]
+    misc        => $config->{misc}    || [ qw/  5Mbit  10Mbit/ ],
   };
 
   inspect $shaper if Rex::Malta::DEBUG;
@@ -29,25 +29,34 @@ task 'setup' => sub {
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/modules-load.conf.ifb" );
 
-    file "/etc/network/interfaces.d/ifb", ensure => 'present',
+    file "/etc/modprobe.d/ifb.conf", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
-      content => template( "files/interfaces.ifb" );
+      content => template( "files/modprobe.conf.ifb" );
   }
 
-  file "/etc/network/if-up.d/shaper0", ensure => 'present',
+  else {
+    file [
+      "/etc/modules-load.d/ifb.conf",
+      "/etc/modprobe.d/ifb.conf",
+    ], ensure => 'absent';
+  }
+
+  file "/etc/network/if-up.d/shaper", ensure => 'present',
     owner => 'root', group => 'root', mode => 755,
-    content => template( "files/if-up.shaper.root" );
+    content => template( "files/if-up.shaper" );
 
   file "/etc/network/if-down.d/shaper", ensure => 'present',
     owner => 'root', group => 'root', mode => 755,
-    content => template( "files/if-down.shaper.root" );
+    content => template( "files/if-down.shaper" );
 };
 
 task 'clean' => sub {
   return unless my $shaper = config;
 
   file [
+    "/etc/network/if-up.d/shaper0",
     "/etc/network/if-down.d/shaper0",
+    "/etc/network/interfaces.d/ifb",
   ], ensure => 'absent';
 };
 
@@ -56,7 +65,7 @@ task 'remove' => sub {
 
   file [
     "/etc/modules-load.d/ifb.conf",
-    "/etc/network/interfaces.d/ifb",
+    "/etc/modprobe.d/ifb.conf",
     "/etc/network/if-up.d/shaper0",
     "/etc/network/if-down.d/shaper",
   ], ensure => 'absent';
@@ -76,16 +85,16 @@ task 'status' => sub {
 __DATA__
 
 @shaper_status
-echo "===== Network Ethernet device ====="
-/sbin/tc -s qdisc show dev eth0
-/sbin/tc -s class show dev eth0
-/sbin/tc -s filter show dev eth0
+echo "===== Egress ====="
+/sbin/tc -s -p qdisc show dev eth0
+/sbin/tc -s -p class show dev eth0
+/sbin/tc -s -p filter show dev eth0
 
 if [ -n "<%= $shaper->{ifb} ? "IFB" : "" %>" ]; then
-  echo "===== Intermediate Functional Block device ====="
-  /sbin/tc -s qdisc show dev ifb0
-  /sbin/tc -s class show dev ifb0
-  /sbin/tc -s filter show dev ifb0
+  echo "===== Ingress ====="
+  /sbin/tc -s -p qdisc show dev ifb0
+  /sbin/tc -s -p class show dev ifb0
+  /sbin/tc -s -p filter show dev ifb0
 fi
 @end
 

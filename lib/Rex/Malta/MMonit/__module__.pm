@@ -14,16 +14,18 @@ sub config {
 
   my $mmonit = {
     active      => $config->{active}    // 0,
-    restart     => $config->{restart}   // 1,
     platform    => $config->{platform}  || "linux-x64",
     version     => $config->{version}   || "3.7.1",
     workdir     => $config->{workdir}   || "/opt/mmonit",
-    address     => $config->{address}   || [ "127.0.0.1" ],
+    address     => $config->{address}   || "127.0.0.1",
     port        => $config->{port}      || "3127",
     schema      => $config->{schema}    || "mysql://monit:monit\@127.0.0.1/mmonit",
     owner       => $config->{owner}     || "Unknown",
     license     => $config->{license}   || "none",
   };
+
+  $mmonit->{address} = [ $mmonit->{address} ]
+    unless ref $mmonit->{address} eq 'ARRAY';
 
   $mmonit->{distrib} = sprintf DISTRIB, @$mmonit{ qw/version platform/ };
   $mmonit->{archive} = sprintf ARCHIVE, @$mmonit{ qw/version platform/ };
@@ -39,16 +41,14 @@ sub config {
 task 'setup' => sub {
   return unless my $mmonit = config;
 
-  #pkg [ qw/mysql-client php5-mysql/ ], ensure => 'present';
-
-  unless ( get_gid "mmonit" ) {
-    create_group "mmonit", system => 1;
+  unless ( get_gid 'mmonit' ) {
+    create_group 'mmonit', system => 1;
   }
 
-  unless ( get_uid "mmonit" ) {
-    create_user "mmonit",
+  unless ( get_uid 'mmonit' ) {
+    create_user 'mmonit',
       home => $mmonit->{workdir}, no_create_home => 1,
-      groups => [ "mmonit" ], system => 1, shell => "/bin/false",
+      groups => [ 'mmonit' ], system => 1, shell => "/bin/false",
       comment => "mmonit";
   }
 
@@ -74,7 +74,7 @@ task 'setup' => sub {
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/mmonit.service" ),
     on_change => sub {
-      run 'systemd_restart', timeout => 10,
+      run 'systemd_daemon_reload', timeout => 10,
         command => "systemctl daemon-reload";
     };
 
@@ -86,8 +86,8 @@ task 'setup' => sub {
     owner => 'mmonit', group => 'mmonit', mode => 600,
     source => "files/mmonit.pem";
 
-  service 'mmonit', ensure => "started";
-  service 'mmonit' => "restart" if $mmonit->{restart};
+  service 'mmonit', ensure => 'started';
+  service 'mmonit' => 'restart';
 };
 
 task 'clean' => sub {
@@ -98,18 +98,18 @@ task 'clean' => sub {
 task 'remove' => sub {
   my $mmonit = config -force;
 
-  run "kill_mmonit", timeout => 10,
+  run 'kill_mmonit', timeout => 10,
     command => template( "\@kill_mmonit" );
 
-  delete_user  "mmonit" if get_uid "mmonit";
-  delete_group "mmonit" if get_gid "mmonit";
+  delete_user  'mmonit' if get_uid 'mmonit';
+  delete_group 'mmonit' if get_gid 'mmonit';
 
   run 'systemd_tmpfiles', timeout => 10,
     command => "systemd-tmpfiles --remove /etc/tmpfiles.d/mmonit.conf";
 
   file [ "/etc/systemd/system/mmonit.service" ], ensure => 'absent',
     on_change => sub {
-      run 'systemd_restart', timeout => 10,
+      run 'systemd_daemon_reload', timeout => 10,
         command => "systemctl daemon-reload";
     };
 

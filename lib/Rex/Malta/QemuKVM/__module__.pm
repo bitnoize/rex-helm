@@ -10,7 +10,6 @@ sub config {
 
   my $qemukvm = {
     active      => $config->{active}    // 0,
-    restart     => $config->{restart}   // 1,
     monit       => $config->{monit}     || { },
   };
 
@@ -39,7 +38,7 @@ task 'setup' => sub {
 
   service 'libvirtd', ensure => 'started';
   service 'libvirt-guests', ensure => 'started';
-  service 'libvirtd' => "restart" if $qemukvm->{restart};
+  service 'libvirtd' => 'restart';
 
   if ( is_installed 'monit' ) {
     file "/etc/monit/conf-available/qemukvm", ensure => 'present',
@@ -55,7 +54,7 @@ task 'setup' => sub {
       unlink "/etc/monit/conf-enabled/qemukvm";
     }
 
-    service 'monit' => "restart" if $qemukvm->{restart};
+    service 'monit' => 'restart';
   }
 };
 
@@ -74,9 +73,16 @@ task 'remove' => sub {
   file [
     "/etc/default/libvirtd",
     "/etc/default/libvirt-guests",
-    "/etc/monit/conf-available/qemukvm",
-    "/etc/monit/conf-enabled/qemukvm",
   ], ensure => 'absent';
+
+  if ( is_installed 'monit' ) {
+    file [
+      "/etc/monit/conf-available/qemukvm",
+      "/etc/monit/conf-enabled/qemukvm",
+    ], ensure => 'absent';
+
+    service 'monit' => 'restart';
+  }
 };
 
 task 'status' => sub {

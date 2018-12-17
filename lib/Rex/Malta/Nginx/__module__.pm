@@ -10,7 +10,6 @@ sub config {
 
   my $nginx = {
     active      => $config->{active}    // 0,
-    restart     => $config->{restart}   // 1,
     conf        => $config->{conf}      || { },
     snippets    => $config->{snippets}  || { },
     secrets     => $config->{secrets}   || { },
@@ -103,19 +102,26 @@ task 'setup' => sub {
 
   for my $name ( keys %$sites ) {
     my $site = $sites->{ $name };
+    $site->{name} = $name;
 
     $site->{enabled}  //= 0;
-    $site->{domain}   ||= [ "_" ];
-    $site->{address}  ||= [ "127.0.0.1" ];
+    $site->{sample}   ||= "default";
+    $site->{domain}   ||= "_";
+    $site->{address}  ||= "127.0.0.1";
     $site->{port}     ||= 80;
     $site->{sslport}  ||= 443;
     $site->{cert}     ||= "";
+
+    for ( qw/domain address/ ) {
+      $site->{ $_ } = [ $site->{ $_ } ]
+        unless ref $site->{ $_ } eq 'ARRAY';
+    }
 
     set site => $site;
 
     file "/etc/nginx/sites-available/$name", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
-      content => template( "files/nginx.site.$name" );
+      content => template( "files/nginx.site.$site->{sample}" );
 
     if ( $site->{enabled} ) {
       symlink "/etc/nginx/sites-available/$name",
@@ -137,8 +143,8 @@ task 'setup' => sub {
     }
   }
 
-  service 'nginx', ensure => "started";
-  service 'nginx' => "restart" if $nginx->{restart};
+  service 'nginx', ensure => 'started';
+  service 'nginx' => 'restart';
 
   file "/var/www/default/index.html", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
@@ -164,7 +170,7 @@ task 'setup' => sub {
       unlink "/etc/monit/conf-enabled/nginx";
     }
 
-    service 'monit' => "restart" if $nginx->{restart};
+    service 'monit' => 'restart';
   }
 };
 
@@ -179,7 +185,7 @@ task 'clean' => sub {
     "/var/www/html",
   ], ensure => 'absent';
 
-  service 'nginx' => "restart" if $nginx->{restart};
+  service 'nginx' => 'restart';
 };
 
 task 'remove' => sub {

@@ -10,7 +10,6 @@ sub config {
 
   my $ntp = {
     active      => $config->{active}    // 0,
-    restart     => $config->{restart}   // 1,
     monit       => $config->{monit}     || { },
   };
 
@@ -35,7 +34,7 @@ task 'setup' => sub {
     content => template( "files/ntp.conf" );
 
   service 'ntp', ensure => 'started';
-  service 'ntp' => "restart" if $ntp->{restart};
+  service 'ntp' => 'restart';
 
   if ( is_installed 'monit' ) {
     file "/etc/monit/conf-available/ntp", ensure => 'present',
@@ -51,7 +50,7 @@ task 'setup' => sub {
       unlink "/etc/monit/conf-enabled/ntp";
     }
 
-    service 'monit' => "restart" if $ntp->{restart};
+    service 'monit' => 'restart';
   }
 };
 

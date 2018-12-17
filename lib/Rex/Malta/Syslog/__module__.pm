@@ -10,7 +10,6 @@ sub config {
 
   my $syslog = {
     active      => $config->{active}    // 0,
-    restart     => $config->{restart}   // 1,
     rsyslog     => $config->{rsyslog}   || { },
     logrotate   => $config->{logrotate} || { },
     monit       => $config->{monit}     || { },
@@ -53,8 +52,8 @@ task 'setup' => sub {
     }
   }
 
-  service 'rsyslog', ensure => "started";
-  service 'rsyslog' => "restart" if $syslog->{restart};
+  service 'rsyslog', ensure => 'started';
+  service 'rsyslog' => 'restart';
 
   file "/etc/logrotate.conf", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
@@ -90,7 +89,7 @@ task 'setup' => sub {
       unlink "/etc/monit/conf-enabled/syslog";
     }
 
-    service 'monit' => "restart" if $syslog->{restart};
+    service 'monit' => 'restart';
   }
 };
 
@@ -117,12 +116,16 @@ task 'clean' => sub {
 task 'remove' => sub {
   my $syslog = config -force;
 
-  Rex::Logger::info( "Syslog does NOT removed" => 'warn' );
+  # Do NOT remove rsyslog and logrotate
 
-  file [
-    "/etc/monit/conf-available/syslog",
-    "/etc/monit/conf-enabled/syslog",
-  ], ensure => 'absent';
+  if ( is_installed 'monit' ) {
+    file [
+      "/etc/monit/conf-available/syslog",
+      "/etc/monit/conf-enabled/syslog",
+    ], ensure => 'absent';
+
+    service 'monit' => 'restart';
+  }
 };
 
 task 'status' => sub {

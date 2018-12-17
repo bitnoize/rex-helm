@@ -73,30 +73,28 @@ task 'setup', sub {
     my $passwd = join ':', 'root', $system->{rootpw};
 
     run 'rootpw_chpasswd', timeout => 10,
-      command => "echo '$passwd' | chpasswd";
+      command => sprintf "echo '%s' | chpasswd", $passwd;
   }
 
   if ( is_dir "/boot/grub" ) {
     file "/etc/default/grub", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
-      content => template( "files/default.grub" ),
-      on_change => sub {
-        run 'grub_update',
-          command => "update-grub";
-      };
+      content => template( "files/default.grub" );
+
+    run 'grub_update', timeout => 10,
+      command => "update-grub";
   }
 
   file "/etc/timezone", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
-    content => $system->{timezone},
-    on_change => sub {
-      run 'tzdata_configure',
-        command => "dpkg-reconfigure -f noninteractive tzdata";
-    };
+    content => $system->{timezone};
+
+  run 'tzdata_configure', timeout => 10,
+    command => "dpkg-reconfigure -f noninteractive tzdata";
 
   my $banner = LOCAL {
     run 'banner_figlet', timeout => 10,
-      command => "figlet -k $system->{hostname}";
+      command => sprintf "figlet -k %s", $system->{hostname};
   };
 
   file "/etc/motd", ensure => 'present',
@@ -245,6 +243,9 @@ task 'clean' => sub {
 
     "/etc/apt/apt.conf.d/10norecommend",
     "/etc/apt/apt.conf.d/90extradebs",
+
+    "/etc/sudoers.d/90-cloud-init-users",
+    "/etc/sysctl.d/10-forward.conf",
   ], ensure => 'absent';
 };
 
@@ -256,6 +257,17 @@ task 'remove' => sub {
 task 'status' => sub {
   my $system = config;
 
+};
+
+task 'monit' => sub {
+  my $system = config;
+
+  die "Monit is not installed\n" unless is_installed 'monit';
+
+  run 'monit_system_status', timeout => 10,
+    command => sprintf "monit status %s", $system->{hostname};
+
+  say last_command_output;
 };
 
 task 'swapon' => sub {
@@ -270,6 +282,8 @@ task 'swapon' => sub {
 
   run 'swapon' => timeout => 300,
     command => template( "\@swapon" );
+
+  say last_command_output if Rex::Malta::DEBUG;
 };
 
 task 'swapoff' => sub {
@@ -283,6 +297,8 @@ task 'swapoff' => sub {
 
   run 'swapoff', timeout => 300,
     command => template( "\@swapoff" );
+
+  say last_command_output if Rex::Malta::DEBUG;
 };
 
 task 'sensors' => sub {
@@ -325,6 +341,7 @@ rm -f <%= $system->{swapfile} %>
 # There are a lot of shit on default Debian installation
 
 apt-get -y --purge remove \
+  acpi-support-base acpid \
   task-english task-ssh-server xauth rblcheck strace  \
   eject laptop-detect resolvconf vim-tiny netcat-traditional  \
   aptitude-doc-en apt-listchanges python-apt python-apt-common  \

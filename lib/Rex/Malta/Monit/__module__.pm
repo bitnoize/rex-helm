@@ -10,7 +10,6 @@ sub config {
 
   my $monit = {
     active      => $config->{active}  // 0,
-    restart     => $config->{restart} // 1,
     address     => $config->{address} || [ "127.0.0.1" ],
     port        => $config->{port}    || 2812,
     auth        => $config->{auth}    || "monit:secret",
@@ -18,6 +17,9 @@ sub config {
                       "https://monit:secret\@monit.test.net:3127/collector",
     confs       => $config->{confs}   || { },
   };
+
+  $monit->{address} = [ $monit->{address} ]
+    unless ref $monit->{address} eq 'ARRAY';
 
   $monit->{cert} = "/etc/monit/monit.pem";
 
@@ -80,8 +82,8 @@ task 'setup' => sub {
     }
   }
 
-  service 'monit', ensure => "started";
-  service 'monit' => "restart" if $monit->{restart};
+  service 'monit', ensure => 'started';
+  service 'monit' => 'restart';
 
   if ( is_installed 'logrotate' ) {
     file "/etc/logrotate.d/monit", ensure => 'present',
@@ -111,7 +113,7 @@ task 'clean' => sub {
     "/var/lib/monit/state"
   ], ensure => 'absent';
 
-  service 'monit' => 'restart' if $monit->{restart};
+  service 'monit' => 'restart';
 };
 
 task 'remove' => sub {
@@ -122,8 +124,13 @@ task 'remove' => sub {
   file [
     "/etc/default/monit",
     "/etc/monit",
-    "/etc/logrotate.d/monit",
   ], ensure => 'absent';
+
+  if ( is_installed 'logrotate' ) {
+    file [
+      "/etc/logrotate.d/monit",
+    ], ensure => 'absent';
+  }
 };
 
 task 'status' => sub {

@@ -10,11 +10,13 @@ sub config {
 
   my $openssh = {
     active      => $config->{active}    // 0,
-    restart     => $config->{restart}   // 1,
-    address     => $config->{address}   || [ "0.0.0.0" ],
+    address     => $config->{address}   || "0.0.0.0",
     port        => $config->{port}      || 22,
     monit       => $config->{monit}     || { },
   };
+
+  $openssh->{address} = [ $openssh->{address} ]
+    unless ref $openssh->{address} eq 'ARRAY';
 
   $openssh->{monit}{enabled}  //= 0;
 
@@ -48,8 +50,8 @@ task 'setup' => sub {
     owner => 'root', group => 'root', mode => 600,
     content => template( "files/authorized_keys" );
 
-  service 'ssh', ensure => "started";
-  service 'ssh' => "restart" if $openssh->{restart};
+  service 'ssh', ensure => 'started';
+  service 'ssh' => 'restart';
 
   if ( is_installed 'monit' ) {
     file "/etc/monit/conf-available/openssh", ensure => 'present',
@@ -65,7 +67,7 @@ task 'setup' => sub {
       unlink "/etc/monit/conf-enabled/openssh";
     }
 
-    service 'monit' => "restart" if $openssh->{restart};
+    service 'monit' => 'restart';
   }
 };
 

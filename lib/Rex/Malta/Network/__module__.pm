@@ -9,12 +9,15 @@ sub config {
   return unless my $config = Rex::Malta::config( network => @_ );
 
   my $network = {
-    active      => $config->{active}    // 0,
-    forward     => $config->{forward}   // 0,
-    resolver    => $config->{resolver}  || [ qw/8.8.8.8 8.8.4.4/ ],
-    ethernet    => $config->{ethernet}  || { },
-    bridge      => $config->{bridge}    || { },
+    active      => $config->{active}      // 0,
+    forward     => $config->{forward}     // 0,
+    nameserver  => $config->{nameserver}  || [ qw/8.8.8.8 8.8.4.4/ ],
+    ethernet    => $config->{ethernet}    || { },
+    bridge      => $config->{bridge}      || { },
   };
+
+  $network->{nameserver} = [ $network->{nameserver} ]
+    unless ref $network->{nameserver} eq 'ARRAY';
 
   inspect $network if Rex::Malta::DEBUG;
 

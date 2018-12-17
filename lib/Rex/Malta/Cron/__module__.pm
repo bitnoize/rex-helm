@@ -10,7 +10,6 @@ sub config {
 
   my $cron = {
     active      => $config->{active}    // 0,
-    restart     => $config->{restart}   // 1,
     crontab     => $config->{crontab}   || { },
     hourly      => $config->{hourly}    || { },
     daily       => $config->{daily}     || { },
@@ -76,8 +75,8 @@ task 'setup', sub {
     }
   }
 
-  service 'cron', ensure => "started";
-  service 'cron' => "restart" if $cron->{restart};
+  service 'cron', ensure => 'started';
+  service 'cron' => 'restart';
 
   if ( is_installed 'monit' ) {
     file "/etc/monit/conf-available/cron", ensure => 'present',
@@ -93,7 +92,7 @@ task 'setup', sub {
       unlink "/etc/monit/conf-enabled/cron";
     }
 
-    service 'monit' => "restart" if $cron->{restart};
+    service 'monit' => 'restart';
   }
 };
 

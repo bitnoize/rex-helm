@@ -56,7 +56,7 @@ task 'setup' => sub {
       unlink "/etc/monit/conf-enabled/rblcheck";
     }
 
-    service 'monit' => "restart" if $rblcheck->{restart};
+    service 'monit' => 'restart';
   }
 };
 
@@ -81,9 +81,16 @@ task 'remove' => sub {
 
   file [
     "/etc/rblcheck",
-    "/etc/monit/conf-available/rblcheck",
-    "/etc/monit/conf-enabled/rblcheck",
   ], ensure => 'absent';
+
+  if ( is_installed 'monit' ) {
+    file [
+      "/etc/monit/conf-available/rblcheck",
+      "/etc/monit/conf-enabled/rblcheck",
+    ], ensure => 'absent';
+
+    service 'monit' => 'restart';
+  }
 };
 
 task 'status' => sub {

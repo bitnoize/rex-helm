@@ -10,17 +10,21 @@ sub config {
 
   my $collectd = {
     active      => $config->{active}    // 0,
-    restart     => $config->{restart}   // 1,
     server      => $config->{server}    // 0,
     interval    => $config->{interval}  || 60,
     remote      => $config->{remote}    || "graph.test.net",
-    interface   => $config->{interface} || [ "eth0" ],
-    address     => $config->{address}   || [ "0.0.0.0" ],
+    interface   => $config->{interface} || "eth0",
+    address     => $config->{address}   || "0.0.0.0",
     port        => $config->{port}      || 25826,
     username    => $config->{username}  || "stats",
     password    => $config->{password}  || "secret",
     confs       => $config->{confs}     || { },
   };
+
+  for ( qw/interface address/ ) {
+    $collectd->{ $_ } = [ $collectd->{ $_ } ]
+      unless ref $collectd->{ $_ } eq 'ARRAY';
+  }
 
   inspect $collectd if Rex::Malta::DEBUG;
 
@@ -69,8 +73,8 @@ task 'setup' => sub {
     }
   }
 
-  service 'collectd', ensure => "started";
-  service 'collectd' => "restart" if $collectd->{restart};
+  service 'collectd', ensure => 'started';
+  service 'collectd' => 'restart';
 };
 
 task 'clean' => sub {
