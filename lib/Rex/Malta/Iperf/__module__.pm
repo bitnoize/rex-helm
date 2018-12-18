@@ -6,7 +6,10 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( iperf => @_ );
+  my ( $force ) = @_;
+
+  my $config = param_lookup 'iperf', { };
+  return unless $config->{active} or $force;
 
   my $iperf = {
     active      => $config->{active}    // 0,

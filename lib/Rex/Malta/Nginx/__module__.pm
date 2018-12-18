@@ -6,7 +6,10 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( nginx => @_ );
+  my ( $force ) = @_;
+
+  my $config = param_lookup 'nginx', { };
+  return unless $config->{active} or $force;
 
   my $nginx = {
     active      => $config->{active}    // 0,

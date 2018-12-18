@@ -6,14 +6,20 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( redis => @_ );
+  my ( $force ) = @_;
+
+  my $config = param_lookup 'redis', { };
+  return unless $config->{active} or $force;
 
   my $redis = {
     active      => $config->{active}    // 0,
-    address     => $config->{address}   || [ "127.0.0.1" ],
+    address     => $config->{address}   || "127.0.0.1",
     port        => $config->{port}      || 6379,
     monit       => $config->{monit}     || { },
   };
+
+  $redis->{address} = [ $redis->{address} ]
+    unless ref $redis->{address} eq 'ARRAY';
 
   $redis->{monit}{enabled}  //= 0;
   $redis->{monit}{address}  ||= $redis->{address}[0];

@@ -8,31 +8,15 @@ use Rex -feature => [ '1.4' ];
 use constant DEBUG => $ENV{REX_DEBUG} ? 1 : 0;
 
 my $modules = get( 'modules' ) || [ ];
-$modules = [ ] unless ref $modules eq 'ARRAY';
-
 include map { "Rex::Malta::$_" } @$modules;
-
-sub config {
-  my ( $category, $force ) = @_;
-
-  die "Unknown config category" unless $category;
-
-  die "Bad config category '$category'"
-    unless grep { $category eq lc $_ } 'global', @$modules;
-
-  my $config = param_lookup $category, { };
-  $config = { } unless ref $config eq 'HASH';
-
-  ( $config->{active} || $force ) ? $config : undef;
-}
 
 sub process {
   my ( $task, $param ) = @_;
 
-  #my %info = get_system_information;
+  my %info = get_system_information;
 
-  #die "Only Debian systems supported yet\n"
-  #  unless $info{operatingsystem} eq "Debian";
+  die "Only Debian systems supported yet, sorry\n"
+    unless $info{operatingsystem} eq "Debian";
 
   map { "Rex::Malta::$_"->$task( %$param ) }
     grep { "Rex::Malta::$_"->config } @$modules;
@@ -115,33 +99,4 @@ done < "$PACKAGES_LIST"
 
 exit 0
 @end
-
-__END__
-
-sub global {
-  my ( @fields ) = @_;
-  return { } unless @fields;
-
-  my @values = split /\n/, run 'extract_global',
-    command => template( "\@extract_global", fields => \@fields );
-
-  my %global = map {
-    my $field = $_;
-    my $value = shift @values;
-
-    die "Required global $field is not set\n" unless $value;
-    Rex::Logger::info( "Extract global $field => $value" );
-
-    ( $field => $value );
-  } @fields;
-
-  return \%global;
-}
-
-@extract_global
-[ -f "/etc/default/rex" ] || exit 100
-source /etc/default/rex
-<%= join "\n", map { sprintf "echo \$%s", uc $_ } @$fields %>
-@end
-
 

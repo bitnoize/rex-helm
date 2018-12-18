@@ -10,7 +10,10 @@ use constant ARCHIVE => "/tmp/mmonit-%s-%s.tar.gz";
 use constant SCRAPPY => "/tmp/mmonit-%s";
 
 sub config {
-  return unless my $config = Rex::Malta::config( mmonit => @_ );
+  my ( $force ) = @_;
+
+  my $config = param_lookup 'mmonit', { };
+  return unless $config->{active} or $force;
 
   my $mmonit = {
     active      => $config->{active}    // 0,

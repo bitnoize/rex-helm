@@ -1,2 +1,7 @@
 LoadPlugin memory
 
+<Plugin memory>
+  ValuesAbsolute true
+  ValuesPercentage true
+</Plugin>
+

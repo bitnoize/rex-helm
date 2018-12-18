@@ -6,11 +6,14 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( monit => @_ );
+  my ( $force ) = @_;
+
+  my $config = param_lookup 'monit', { };
+  return unless $config->{active} or $force;
 
   my $monit = {
     active      => $config->{active}  // 0,
-    address     => $config->{address} || [ "127.0.0.1" ],
+    address     => $config->{address} || "127.0.0.1",
     port        => $config->{port}    || 2812,
     auth        => $config->{auth}    || "monit:secret",
     mmonit      => $config->{mmonit}  ||

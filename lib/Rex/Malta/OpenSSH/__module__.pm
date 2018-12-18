@@ -6,7 +6,10 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( openssh => @_ );
+  my ( $force ) = @_;
+
+  my $config = param_lookup 'openssh', { };
+  return unless $config->{active} or $force;
 
   my $openssh = {
     active      => $config->{active}    // 0,
@@ -79,12 +82,16 @@ task 'clean' => sub {
 task 'remove' => sub {
   my $openssh = config -force;
 
-  # OpenSSH does NOT removed
+  # Do NOT remove OpenSSH
 
-  file [
-    "/etc/monit/conf-available/openssh",
-    "/etc/monit/conf-enabled/openssh",
-  ], ensure => 'absent';
+  if ( is_installed 'monit' ) {
+    file [
+      "/etc/monit/conf-available/openssh",
+      "/etc/monit/conf-enabled/openssh",
+    ], ensure => 'absent';
+
+    service 'monit' => 'restart';
+  }
 };
 
 task 'status' => sub {

@@ -6,7 +6,10 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( dnsmasq => @_ );
+  my ( $force ) = @_;
+
+  my $config = param_lookup 'dnsmasq', { };
+  return unless $config->{active} or $force;
 
   my $dnsmasq = {
     active      => $config->{active}    // 0,

@@ -6,7 +6,10 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( gitweb => @_ );
+  my ( $force ) = @_;
+
+  my $config = param_lookup 'gitweb', { };
+  return unless $config->{active} or $force;
 
   my $gitweb = {
     active      => $config->{active}      // 0,

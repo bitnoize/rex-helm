@@ -6,7 +6,10 @@ use warnings;
 use Rex -feature => [ '1.4' ];
 
 sub config {
-  return unless my $config = Rex::Malta::config( postfix => @_ );
+  my ( $force ) = @_;
+
+  my $config = param_lookup 'postfix', { };
+  return unless $config->{active} or $force;
 
   my $postfix = {
     active      => $config->{active}    // 0,

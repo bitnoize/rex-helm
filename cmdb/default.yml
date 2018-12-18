@@ -145,7 +145,6 @@ iperf:
 
 qemukvm:
   active:       0
-# careful:      0
   monit:
     enabled:      1
 
@@ -179,7 +178,6 @@ unbound:
 
 nginx:
   active:       0
-# careful:      0
   conf:
     'cache':      1
     'gzip':       1
@@ -204,7 +202,6 @@ nginx:
 
 mysql:
   active:       0
-# careful:      0
 # address:      127.0.0.1
 # port:         3306
 # rootpw:       'secret'
@@ -214,7 +211,6 @@ mysql:
 
 redis:
   active:       0
-# careful:      0
 # address:      127.0.0.1
 # port:         6379
   monit:
@@ -226,7 +222,6 @@ redis:
 
 postfix:
   active:       0
-# careful:      0
   monit:
     enabled:      1
 
