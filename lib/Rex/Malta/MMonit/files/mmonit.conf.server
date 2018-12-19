@@ -6,24 +6,10 @@
        
        <Engine name="mmonit" defaultHost="localhost" fileCache="10MB">
 
-           <!--
-           <Realm url="sqlite:///db/mmonit.db?synchronous=normal&heap_limit=8000&foreign_keys=on&journal_mode=wal"
-                  minConnections="5"
-                  maxConnections="25"
-                  reapConnections="300" />
-           -->
-
            <Realm url="<%= $mmonit->{schema} %>"
                   minConnections="5"
                   maxConnections="25"
                   reapConnections="300" />
-
-           <!--
-           <Realm url="postgresql://mmonit:mmonit@127.0.0.1:5432/mmonit?connect-timeout=5"
-                  minConnections="5"
-                  maxConnections="25"
-                  reapConnections="300" />
-           -->
 
            <ErrorLogger directory="logs" fileName="error.log" rotate="week" />
 

@@ -18,11 +18,11 @@ sub config {
   my $mmonit = {
     active      => $config->{active}    // 0,
     platform    => $config->{platform}  || "linux-x64",
-    version     => $config->{version}   || "3.7.1",
+    version     => $config->{version}   || "3.7.2",
     workdir     => $config->{workdir}   || "/opt/mmonit",
     address     => $config->{address}   || "127.0.0.1",
     port        => $config->{port}      || "3127",
-    schema      => $config->{schema}    || "mysql://monit:monit\@127.0.0.1/mmonit",
+    schema      => $config->{schema}    || "postgresql://monit:monit\@127.0.0.1/mmonit",
     owner       => $config->{owner}     || "Unknown",
     license     => $config->{license}   || "none",
   };
@@ -54,6 +54,11 @@ task 'setup' => sub {
       groups => [ 'mmonit' ], system => 1, shell => "/bin/false",
       comment => "mmonit";
   }
+
+  # FIXME
+  file "/root/mmonit.sh", ensure => 'present',
+    owner => 'root', group => 'root', mode => 644,
+    content => template( "\@mmonit_install" );
 
   run 'mmonit_install', timeout => 900,
     command => template( "\@mmonit_install" );

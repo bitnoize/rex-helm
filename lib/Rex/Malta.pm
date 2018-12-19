@@ -7,6 +7,8 @@ use Rex -feature => [ '1.4' ];
 
 use constant DEBUG => $ENV{REX_DEBUG} ? 1 : 0;
 
+our $VERSION = '0.02';
+
 my $modules = get( 'modules' ) || [ ];
 include map { "Rex::Malta::$_" } @$modules;
 

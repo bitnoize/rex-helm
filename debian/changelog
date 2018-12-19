@@ -1,5 +1,5 @@
-rex-malta (0.01-4) unstable; urgency=medium
+rex-malta (0.02-1) unstable; urgency=medium
 
-  * New upstream version 0.01
+  * New upstream version 0.02
 
- -- Secure Builder <build@extradebs>  Mon, 29 Nov 2018 00:00:00 +0000
+ -- Secure Builder <build@extradebs>  Wed, 19 Dec 2018 00:00:00 +0000
