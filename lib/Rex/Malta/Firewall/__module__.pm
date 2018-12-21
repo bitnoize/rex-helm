@@ -14,7 +14,7 @@ sub config {
   my $firewall = {
     active      => $config->{active}    // 0,
     type        => $config->{type}      || 'none',
-    variable    => $config->{variable}  || { },
+    inline      => $config->{inline}    || { },
   };
 
   inspect $firewall if Rex::Malta::DEBUG;
