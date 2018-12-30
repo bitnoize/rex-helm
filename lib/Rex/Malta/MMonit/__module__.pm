@@ -115,18 +115,17 @@ task 'remove' => sub {
   run 'systemd_tmpfiles', timeout => 10,
     command => "systemd-tmpfiles --remove /etc/tmpfiles.d/mmonit.conf";
 
-  file [ "/etc/systemd/system/mmonit.service" ], ensure => 'absent',
+  file "/etc/systemd/system/mmonit.service", ensure => 'absent',
     on_change => sub {
       run 'systemd_daemon_reload', timeout => 10,
         command => "systemctl daemon-reload";
     };
 
-  file [
-    "/etc/security/limits.d/mmonit.conf",
-    "/etc/tmpfiles.d/mmonit.conf",
-    "/root/mmonit.state",
-    $mmonit->{workdir},
-  ], ensure => 'absent';
+  file [ qq{
+    /etc/security/limits.d/mmonit.conf
+    /etc/tmpfiles.d/mmonit.conf
+    /root/mmonit.state
+  }, $mmonit->{workdir} ], ensure => 'absent';
 };
 
 task 'status' => sub {

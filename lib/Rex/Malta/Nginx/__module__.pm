@@ -180,13 +180,18 @@ task 'setup' => sub {
 task 'clean' => sub {
   return unless my $nginx = config;
 
-  file [
-    "/etc/nginx/secrets", "/etc/nginx/secret",
-    "/etc/nginx/confs", "/etc/nginx/auths", "/etc/nginx/certs",
-    "/etc/nginx/fastcgi.conf",
-    "/etc/nginx/koi-win", "/etc/nginx/koi-utf", "/etc/nginx/win-utf",
-    "/var/www/html",
-  ], ensure => 'absent';
+  file [ qq{
+    /etc/nginx/secrets
+    /etc/nginx/secret
+    /etc/nginx/confs
+    /etc/nginx/auths
+    /etc/nginx/certs
+    /etc/nginx/fastcgi.conf
+    /etc/nginx/koi-win
+    /etc/nginx/koi-utf
+    /etc/nginx/win-utf
+    /var/www/html
+  } ], ensure => 'absent';
 
   service 'nginx' => 'restart';
 };
@@ -198,15 +203,15 @@ task 'remove' => sub {
     qw/nginx nginx-full nginx-light nginx-extras/
   ], ensure => 'absent';
 
-  file [
-    "/etc/default/nginx",
-    "/etc/nginx",
-    "/var/cache/nginx",
-    "/var/log/nginx",
-    "/etc/logrotate.d/nginx",
-    "/etc/monit/conf-available/nginx",
-    "/etc/monit/conf-enabled/nginx",
-  ], ensure => 'absent';
+  file [ qw{
+    /etc/default/nginx
+    /etc/nginx
+    /var/cache/nginx
+    /var/log/nginx
+    /etc/logrotate.d/nginx
+    /etc/monit/conf-available/nginx
+    /etc/monit/conf-enabled/nginx
+  } ], ensure => 'absent';
 };
 
 task 'status' => sub {

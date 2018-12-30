@@ -148,10 +148,10 @@ task 'setup', sub {
   }
 
   else {
-    file [
-      "/etc/apt/preferences.d/60backports",
-      "/etc/apt/sources.list.d/backports.list",
-    ], ensure => 'absent';
+    file [ qq{
+      /etc/apt/preferences.d/60backports
+      /etc/apt/sources.list.d/backports.list
+    } ], ensure => 'absent';
   }
 
   if ( $system->{extradebs} ) {
@@ -176,12 +176,12 @@ task 'setup', sub {
   }
 
   else {
-    file [
-      "/etc/apt/apt.conf.d/70extradebs",
-      "/etc/apt/preferences.d/70extradebs",
-      "/etc/apt/sources.list.d/extradebs.list",
-      "/etc/apt/trusted.gpg.d/extradebs.gpg",
-    ], ensure => 'absent';
+    file [ qq{
+      /etc/apt/apt.conf.d/70extradebs
+      /etc/apt/preferences.d/70extradebs
+      /etc/apt/sources.list.d/extradebs.list
+      /etc/apt/trusted.gpg.d/extradebs.gpg
+    } ], ensure => 'absent';
   }
 
   update_package_db;
@@ -240,16 +240,16 @@ task 'setup', sub {
 task 'clean' => sub {
   my $system = config;
 
-  file [
-    "/etc/default/rex",
-    "/etc/default/grub.ucf-dist",
+  file [ qq{
+    /etc/default/rex
+    /etc/default/grub.ucf-dist
 
-    "/etc/apt/apt.conf.d/10norecommend",
-    "/etc/apt/apt.conf.d/90extradebs",
+    /etc/apt/apt.conf.d/10norecommend
+    /etc/apt/apt.conf.d/90extradebs
 
-    "/etc/sudoers.d/90-cloud-init-users",
-    "/etc/sysctl.d/10-forward.conf",
-  ], ensure => 'absent';
+    /etc/sudoers.d/90-cloud-init-users
+    /etc/sysctl.d/10-forward.conf
+  } ], ensure => 'absent';
 };
 
 task 'remove' => sub {

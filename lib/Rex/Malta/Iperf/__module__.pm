@@ -87,7 +87,7 @@ task 'setup' => sub {
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.iperf" );
 
-    if ( $iperf->{monit}{enabled} ) {
+    if ( $iperf->{monit}{enabled} and $iperf->{server} ) {
       symlink "/etc/monit/conf-available/iperf",
         "/etc/monit/conf-enabled/iperf";
     }
@@ -112,22 +112,22 @@ task 'remove' => sub {
 
   # Do NOT remove /var/lib/iperf
 
-  file [
-    "/etc/default/iperf",
-    "/etc/iperf",
-    "/etc/systemd/system/iperf.service",
-    "/usr/local/bin/speedtest",
-    "/usr/local/bin/speedtest.run",
-  ], ensure => 'absent';
+  file [ qq{
+    /etc/default/iperf
+    /etc/iperf
+    /etc/systemd/system/iperf.service
+    /usr/local/bin/speedtest
+    /usr/local/bin/speedtest.run
+  } ], ensure => 'absent';
 
   run 'systemd_daemon_reload', timeout => 10,
     command => "systemctl daemon-reload";
 
   if ( is_installed 'monit' ) {
-    file [
-      "/etc/monit/conf-available/iperf",
-      "/etc/monit/conf-enabled/iperf",
-    ], ensure => 'absent';
+    file [ qq{
+      /etc/monit/conf-available/iperf
+      /etc/monit/conf-enabled/iperf
+    } ], ensure => 'absent';
 
     service 'monit' => 'restart';
   }

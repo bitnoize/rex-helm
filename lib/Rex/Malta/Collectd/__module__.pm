@@ -83,16 +83,16 @@ task 'setup' => sub {
 task 'clean' => sub {
   return unless my $collectd = config;
 
-  file [
-    "/etc/collectd/collectd.conf.d/filters.conf",
-    "/etc/collectd/collectd.conf.d/thresholds.conf",
-    "/etc/collectd/collectd.conf.d/redis.conf",
-    "/etc/collectd/collectd.conf.d/mysql.conf",
-    "/etc/collectd/collectd.conf.d/grayips.conf",
-    "/etc/collectd/collectd.conf.d/postfix.conf",
-    "/etc/collectd/collectd.conf.d/postgrey.conf",
-    "/etc/collectd/collectd.conf.d/netlink.conf",
-  ], ensure => 'absent';
+  file [ qq{
+    /etc/collectd/collectd.conf.d/filters.conf
+    /etc/collectd/collectd.conf.d/thresholds.conf
+    /etc/collectd/collectd.conf.d/redis.conf
+    /etc/collectd/collectd.conf.d/mysql.conf
+    /etc/collectd/collectd.conf.d/grayips.conf
+    /etc/collectd/collectd.conf.d/postfix.conf
+    /etc/collectd/collectd.conf.d/postgrey.conf
+    /etc/collectd/collectd.conf.d/netlink.conf
+  } ], ensure => 'absent';
 };
 
 task 'remove' => sub {
@@ -105,10 +105,10 @@ task 'remove' => sub {
 
   # Do NOT remove /var/lib/collectd
 
-  file [
-    "/etc/default/collectd",
-    "/etc/collectd",
-  ], ensure => 'absent';
+  file [ qq{
+    /etc/default/collectd
+    /etc/collectd
+  } ], ensure => 'absent';
 };
 
 task 'status' => sub {

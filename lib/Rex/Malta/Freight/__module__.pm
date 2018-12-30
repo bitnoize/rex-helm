@@ -56,9 +56,10 @@ task 'remove' => sub {
 
   # Do NOT remove /var/lib/freight
 
-  file [
-    "/etc/freight.conf", "/var/www/freight"
-  ], ensure => 'absent';
+  file [ qq{
+    /etc/freight.conf
+    /var/www/freight
+  } ], ensure => 'absent';
 };
 
 task 'status' => sub {

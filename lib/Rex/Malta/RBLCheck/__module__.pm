@@ -14,7 +14,6 @@ sub config {
   my $rblcheck = {
     active      => $config->{active}    // 0,
     hosts       => $config->{hosts}     || [ qw/127.0.0.1/ ],
-    lists       => $config->{lists}     || [ qw/zen.spamhaus.org/ ],
     monit       => $config->{monit}     || { },
   };
 
@@ -33,9 +32,6 @@ task 'setup' => sub {
 
   Rex::Logger::info( "There are no RBL hosts defined" => 'warn' )
     unless @{ $rblcheck->{hosts} };
-
-  Rex::Logger::info( "There are no RBL lists defined" => 'warn' )
-    unless @{ $rblcheck->{lists} };
 
   file "/etc/rblcheck/hosts.conf", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
@@ -68,13 +64,13 @@ task 'clean' => sub {
 
   pkg [ qw/rblcheck/ ], ensure => 'absent';
 
-  file [
-    "/usr/local/bin/rblcheck",
-    "/etc/rblcheck/rbls.conf",
-    "/etc/rblcheck/rbls.conf.dpkg-dist",
-    "/etc/rblcheck/hosts.conf.dpkg-dist",
-    "/etc/rblcheck/lists.conf.dpkg-dist",
-  ], ensure => 'absent';
+  file [ qq{
+    /usr/local/bin/rblcheck
+    /etc/rblcheck/rbls.conf
+    /etc/rblcheck/rbls.conf.dpkg-dist
+    /etc/rblcheck/hosts.conf.dpkg-dist
+    /etc/rblcheck/lists.conf.dpkg-dist
+  } ], ensure => 'absent';
 };
 
 task 'remove' => sub {
@@ -82,15 +78,15 @@ task 'remove' => sub {
 
   pkg [ qw/rblcheck-ng/ ], ensure => "absent";
 
-  file [
-    "/etc/rblcheck",
-  ], ensure => 'absent';
+  file [ qq{
+    /etc/rblcheck
+  } ], ensure => 'absent';
 
   if ( is_installed 'monit' ) {
-    file [
-      "/etc/monit/conf-available/rblcheck",
-      "/etc/monit/conf-enabled/rblcheck",
-    ], ensure => 'absent';
+    file [ qq{
+      /etc/monit/conf-available/rblcheck
+      /etc/monit/conf-enabled/rblcheck
+    } ], ensure => 'absent';
 
     service 'monit' => 'restart';
   }

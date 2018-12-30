@@ -1,0 +1,1 @@
+options ifb numifbs=<%= $network->{shaper}{ifbs} %>

@@ -106,14 +106,14 @@ task 'logrotate' => sub {
 task 'clean' => sub {
   return unless my $syslog = config;
 
-  file [
-    "/var/log/mail.err",
-    "/var/log/mail.warn",
-    "/var/log/mail.info",
-    "/var/log/mail.log",
-    "/var/log/lpr.log",
-    "/var/log/news.log",
-  ], ensure => 'absent';
+  file [ qq{
+    /var/log/mail.err
+    /var/log/mail.warn
+    /var/log/mail.info
+    /var/log/mail.log
+    /var/log/lpr.log
+    /var/log/news.log
+  } ], ensure => 'absent';
 };
 
 task 'remove' => sub {
@@ -122,10 +122,10 @@ task 'remove' => sub {
   # Do NOT remove rsyslog and logrotate
 
   if ( is_installed 'monit' ) {
-    file [
-      "/etc/monit/conf-available/syslog",
-      "/etc/monit/conf-enabled/syslog",
-    ], ensure => 'absent';
+    file [ qq{
+      /etc/monit/conf-available/syslog
+      /etc/monit/conf-enabled/syslog
+    } ], ensure => 'absent';
 
     service 'monit' => 'restart';
   }

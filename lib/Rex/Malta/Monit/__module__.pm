@@ -98,23 +98,23 @@ task 'setup' => sub {
 task 'clean' => sub {
   return unless my $monit = config;
 
-  file [
-    "/etc/monit/conf-enabled/top",
-    "/etc/monit/conf-enabled/rsyslog",
+  file [ qq{
+    /etc/monit/conf-enabled/top
+    /etc/monit/conf-enabled/rsyslog
 
-    "/etc/monit/conf-available/top",
-    "/etc/monit/conf-available/apache2",
-    "/etc/monit/conf-available/mdadm",
-    "/etc/monit/conf-available/memcached",
-    "/etc/monit/conf-available/openntpd",
-    "/etc/monit/conf-available/openssh-server",
-    "/etc/monit/conf-available/pdns-recursor",
-    "/etc/monit/conf-available/snmpd",
-    "/etc/monit/conf-available/ping",
-    "/etc/monit/conf-available/rsyslog",
+    /etc/monit/conf-available/top
+    /etc/monit/conf-available/apache2
+    /etc/monit/conf-available/mdadm
+    /etc/monit/conf-available/memcached
+    /etc/monit/conf-available/openntpd
+    /etc/monit/conf-available/openssh-server
+    /etc/monit/conf-available/pdns-recursor
+    /etc/monit/conf-available/snmpd
+    /etc/monit/conf-available/ping
+    /etc/monit/conf-available/rsyslog
 
-    "/var/lib/monit/state"
-  ], ensure => 'absent';
+    /var/lib/monit/state
+  } ], ensure => 'absent';
 
   service 'monit' => 'restart';
 };
@@ -124,15 +124,13 @@ task 'remove' => sub {
 
   pkg [ qw/monit/ ], ensure => 'absent';
 
-  file [
-    "/etc/default/monit",
-    "/etc/monit",
-  ], ensure => 'absent';
+  file [ qq{
+    /etc/default/monit
+    /etc/monit
+  } ], ensure => 'absent';
 
   if ( is_installed 'logrotate' ) {
-    file [
-      "/etc/logrotate.d/monit",
-    ], ensure => 'absent';
+    file "/etc/logrotate.d/monit", ensure => 'absent';
   }
 };
 

@@ -45,7 +45,6 @@ set 'modules' => [
   'System',     # Basic system stuff
   'Network',    # Network configuration
   'Firewall',   # Iptables rules
-  'Shaper',     # Traffic control
 
   'Monit',      # Service monitoring
   'Collectd',   # Collect and visualize various metrics
@@ -67,7 +66,8 @@ set 'modules' => [
   'Freight',    # Deb repositories for busy people
   'Rsync',      # Remote sync
   'MMonit',     # Monit combiner
-  'CollectdWeb',# Collectd combiner
+# 'CollectdWeb',# Collectd front-end
+  'CGP',        # Collectd front-end
   'Gitweb',     # Gitweb service
 ];
 

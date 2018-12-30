@@ -103,17 +103,17 @@ task 'remove' => sub {
 
   pkg [ qw/dnsmasq/ ], ensure => 'absent';
 
-  file [
-    "/etc/default/dnsmasq",
-    "/etc/dnsmasq.conf",
-    "/etc/dnsmasq.d",
-  ], ensure => 'absent';
+  file [ qq{
+    /etc/default/dnsmasq
+    /etc/dnsmasq.conf
+    /etc/dnsmasq.d
+  } ], ensure => 'absent';
 
   if ( is_installed 'monit' ) {
-    file [
-      "/etc/monit/conf-available/dnsmasq",
-      "/etc/monit/conf-enabled/dnsmasq",
-    ], ensure => 'absent';
+    file [ qq{
+      /etc/monit/conf-available/dnsmasq
+      /etc/monit/conf-enabled/dnsmasq
+    } ], ensure => 'absent';
 
     service 'monit' => 'restart';
   }

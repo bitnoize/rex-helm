@@ -119,25 +119,23 @@ task 'remove' => sub {
 
   # MySQL datadir will not removed
 
-  file [
-    "/etc/default/mysql",
-    "/etc/mysql",
-    "/etc/logrotate.d/mysql-server",
-    "/etc/monit/conf-available/mysql",
-    "/etc/monit/conf-enabled/mysql",
-  ], ensure => 'absent';
+  file [ qq{
+    /etc/default/mysql
+    /etc/mysql
+    /etc/logrotate.d/mysql-server
+    /etc/monit/conf-available/mysql
+    /etc/monit/conf-enabled/mysql
+  } ], ensure => 'absent';
 
   if ( is_installed 'logrotate' ) {
-    file [
-      "/etc/logrotate.d/mysql-server",
-    ], ensure => 'absent';
+    file "/etc/logrotate.d/mysql-server", ensure => 'absent';
   }
 
   if ( is_installed 'monit' ) {
-    file [
-      "/etc/monit/conf-available/mysql",
-      "/etc/monit/conf-enabled/mysql",
-    ], ensure => 'absent';
+    file [ qq{
+      /etc/monit/conf-available/mysql
+      /etc/monit/conf-enabled/mysql
+    } ], ensure => 'absent';
 
     service 'monit' => 'restart';
   }

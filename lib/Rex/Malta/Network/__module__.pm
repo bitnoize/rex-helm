@@ -17,10 +17,17 @@ sub config {
     nameserver  => $config->{nameserver}  || [ qw/8.8.8.8 8.8.4.4/ ],
     ethernet    => $config->{ethernet}    || { },
     bridge      => $config->{bridge}      || { },
+    shaper      => $config->{shaper}      || { },
   };
 
   $network->{nameserver} = [ $network->{nameserver} ]
     unless ref $network->{nameserver} eq 'ARRAY';
+
+  $network->{shaper}{enabled} //= 0;
+  $network->{shaper}{ifbs}    //= 1;
+  $network->{shaper}{link}    ||= [ 1   => qw/100Mbit 100Mbit/ ];
+  $network->{shaper}{main}    ||= [ 10  => qw/ 10Mbit  90Mbit/ ];
+  $network->{shaper}{misc}    ||= [ 90  => qw/ 10Mbit  20Mbit/ ];
 
   inspect $network if Rex::Malta::DEBUG;
 
@@ -59,6 +66,10 @@ task 'setup' => sub {
       };
   }
 
+  else {
+    file "/etc/network/interfaces.d/ethernet", ensure => 'absent';
+  }
+
   my $bridge = $network->{bridge};
 
   if ( keys %$bridge ) {
@@ -74,6 +85,10 @@ task 'setup' => sub {
       };
   }
 
+  else {
+    file "/etc/network/interfaces.d/bridge", ensure => 'absent';
+  }
+
   pkg [ qw/isc-dhcp-client/ ], ensure => "present";
 
   file "/etc/dhcp/dhclient.conf", ensure => 'present',
@@ -87,16 +102,51 @@ task 'setup' => sub {
   file "/etc/gai.conf", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/gai.conf" );
+
+  if ( $network->{shaper}{enabled} ) {
+    file "/etc/modules-load.d/ifb.conf", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/modules-load.conf.ifb" );
+
+    file "/etc/modprobe.d/ifb.conf", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/modprobe.conf.ifb" );
+
+    file "/etc/network/shaper.sh", ensure => 'present',
+      owner => 'root', group => 'root', mode => 755,
+      content => template( "files/network.shaper.sh" );
+  }
+
+  else {
+    file [ qq{
+      /etc/modules-load.d/ifb.conf
+      /etc/modprobe.d/ifb.conf
+      /etc/network/shaper.sh
+    } ], ensure => 'absent';
+      
+  }
 };
 
 task 'clean' => sub {
   return unless my $network = config;
 
+  file [ qq{
+    /etc/network/if-up.d/shaper
+    /etc/network/if-up.d/shaper0
+    /etc/network/if-down.d/shaper
+    /etc/network/if-down.d/shaper0
+    /etc/network/interfaces.d/ifb
+  } ], ensure => 'absent';
 };
 
 task 'remove' => sub {
   my $network = config -force;
 
+  file [ qq{
+    /etc/modules-load.d/ifb.conf
+    /etc/modprobe.d/ifb.conf
+    /etc/network/shaper.sh
+    } ], ensure => 'absent';
 };
 
 task 'status' => sub {
@@ -104,4 +154,30 @@ task 'status' => sub {
 
 };
 
+task 'shaper' => sub {
+  return unless my $network = config;
+
+  die "Param --iface with interface name required\n"
+    unless my $iface = param_lookup 'iface';
+
+  run 'shaper_details', timeout => 10,
+    command => template( "\@shaper_details", iface => $iface );
+
+  say "Shaper details for iface: '$iface'\n", last_command_output;
+};
+
 1;
+
+__DATA__
+
+@shaper_details
+echo -e "\n===== Disciplines ====="
+/sbin/tc -s -p qdisc show dev <%= $iface %>
+
+echo -e "\n===== Classes ====="
+/sbin/tc -s -p class show dev <%= $iface %>
+
+echo -e "\n===== Fileters ====="
+/sbin/tc -s -p filter show dev <%= $iface %>
+@end
+

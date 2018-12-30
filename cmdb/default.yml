@@ -33,18 +33,17 @@ network:
 # nameserver:   [ 8.8.8.8, 8.8.4.4 ]
 # ethernet:     { }
 # bridge:       { }
+# shaper:
+#   enabled:      0
+#   ifbs:         1
+#   link:         [ 1,  100Mbit, 100Mbit ]
+#   base:         [ 10,  10Mbit,  90Mbit ]
+#   misc:         [ 90:  10Mbit,  20Mbit ]
 
 firewall:
   active:       1
 # type:         none
 # inline:       { }
-
-shaper:
-  active:       0
-# ifb:          0
-# link:         [ 100Mbit, 100Mbit ]
-# priv:         [  10Mbit,  90Mbit ]
-# misc:         [   1Mbit,   2Mbit ]
 
 monit:
   active:       1
