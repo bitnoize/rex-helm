@@ -103,14 +103,14 @@ task 'remove' => sub {
 
   pkg [ qw/unbound/ ], ensure => 'absent';
 
-  file [ qq{
+  file [ qw{
     /etc/default/unbound
     /etc/unbound
     /var/lib/unbound
   } ], ensure => 'absent';
 
   if ( is_installed 'monit' ) {
-    file [ qq{
+    file [ qw{
       /etc/monit/conf-available/unbound
       /etc/monit/conf-enabled/unbound
     } ], ensure => 'absent';

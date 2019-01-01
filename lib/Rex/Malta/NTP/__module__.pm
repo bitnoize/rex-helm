@@ -68,7 +68,7 @@ task 'remove' => sub {
 
   pkg [ qw/ntp/ ], ensure => 'absent';
 
-  file [ qq{
+  file [ qw{
     /etc/default/ntp
     /etc/ntp.conf
     /etc/monit/conf-available/ntp

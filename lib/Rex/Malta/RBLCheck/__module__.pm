@@ -64,7 +64,7 @@ task 'clean' => sub {
 
   pkg [ qw/rblcheck/ ], ensure => 'absent';
 
-  file [ qq{
+  file [ qw{
     /usr/local/bin/rblcheck
     /etc/rblcheck/rbls.conf
     /etc/rblcheck/rbls.conf.dpkg-dist
@@ -78,12 +78,10 @@ task 'remove' => sub {
 
   pkg [ qw/rblcheck-ng/ ], ensure => "absent";
 
-  file [ qq{
-    /etc/rblcheck
-  } ], ensure => 'absent';
+  file "/etc/rblcheck", ensure => 'absent';
 
   if ( is_installed 'monit' ) {
-    file [ qq{
+    file [ qw{
       /etc/monit/conf-available/rblcheck
       /etc/monit/conf-enabled/rblcheck
     } ], ensure => 'absent';

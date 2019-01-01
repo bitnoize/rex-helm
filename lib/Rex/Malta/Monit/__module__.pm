@@ -98,7 +98,7 @@ task 'setup' => sub {
 task 'clean' => sub {
   return unless my $monit = config;
 
-  file [ qq{
+  file [ qw{
     /etc/monit/conf-enabled/top
     /etc/monit/conf-enabled/rsyslog
 
@@ -124,7 +124,7 @@ task 'remove' => sub {
 
   pkg [ qw/monit/ ], ensure => 'absent';
 
-  file [ qq{
+  file [ qw{
     /etc/default/monit
     /etc/monit
   } ], ensure => 'absent';

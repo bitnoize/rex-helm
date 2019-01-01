@@ -73,13 +73,13 @@ task 'remove' => sub {
     qw/qemu-kvm libvirt-clients libvirt-daemon-system virtinst virt-top/
   ], ensure => 'absent';
 
-  file [ qq{
+  file [ qw{
     /etc/default/libvirtd
     /etc/default/libvirt-guests
   } ], ensure => 'absent';
 
   if ( is_installed 'monit' ) {
-    file [ qq{
+    file [ qw{
       /etc/monit/conf-available/qemukvm
       /etc/monit/conf-enabled/qemukvm
     } ], ensure => 'absent';

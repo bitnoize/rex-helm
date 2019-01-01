@@ -89,19 +89,19 @@ task 'remove' => sub {
 
   # Do NOT remove /var/lib/redis
 
-  file [ qq{
+  file [ qw{
     /etc/default/redis-server
     /etc/redis
   } ], ensure => 'absent';
 
   if ( is_installed 'logrotate' ) {
-    file [ qq{
+    file [ qw{
       /etc/logrotate.d/redis-server
     } ], ensure => 'absent';
   }
 
   if ( is_installed 'monit' ) {
-    file [ qq{
+    file [ qw{
       /etc/monit/conf-available/redis
       /etc/monit/conf-enabled/redis
     } ], ensure => 'absent';

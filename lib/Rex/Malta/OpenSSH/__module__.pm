@@ -85,7 +85,7 @@ task 'remove' => sub {
   # Do NOT remove OpenSSH
 
   if ( is_installed 'monit' ) {
-    file [ qq{
+    file [ qw{
       /etc/monit/conf-available/openssh
       /etc/monit/conf-enabled/openssh
     } ], ensure => 'absent';

@@ -61,7 +61,7 @@ task 'remove' => sub {
 
   pkg [ qw/rsync/ ], ensure => 'absent';
 
-  file [ qq{
+  file [ qw{
     /etc/default/rsync
     /etc/rsyncd.conf
   } ], ensure => 'absent';

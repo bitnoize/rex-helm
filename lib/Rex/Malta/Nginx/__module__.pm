@@ -180,7 +180,7 @@ task 'setup' => sub {
 task 'clean' => sub {
   return unless my $nginx = config;
 
-  file [ qq{
+  file [ qw{
     /etc/nginx/secrets
     /etc/nginx/secret
     /etc/nginx/confs

@@ -83,7 +83,7 @@ task 'setup' => sub {
 task 'clean' => sub {
   return unless my $collectd = config;
 
-  file [ qq{
+  file [ qw{
     /etc/collectd/collectd.conf.d/filters.conf
     /etc/collectd/collectd.conf.d/thresholds.conf
     /etc/collectd/collectd.conf.d/redis.conf
@@ -105,7 +105,7 @@ task 'remove' => sub {
 
   # Do NOT remove /var/lib/collectd
 
-  file [ qq{
+  file [ qw{
     /etc/default/collectd
     /etc/collectd
   } ], ensure => 'absent';

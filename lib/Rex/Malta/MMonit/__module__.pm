@@ -121,7 +121,7 @@ task 'remove' => sub {
         command => "systemctl daemon-reload";
     };
 
-  file [ qq{
+  file [ qw{
     /etc/security/limits.d/mmonit.conf
     /etc/tmpfiles.d/mmonit.conf
     /root/mmonit.state

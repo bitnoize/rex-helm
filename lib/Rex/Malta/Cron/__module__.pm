@@ -110,7 +110,7 @@ task 'remove' => sub {
   # Do NOT remove cron
 
   if ( is_installed 'monit' ) {
-    file [ qq{
+    file [ qw{
       /etc/monit/conf-available/cron
       /etc/monit/conf-enabled/cron
     } ], ensure => 'absent';

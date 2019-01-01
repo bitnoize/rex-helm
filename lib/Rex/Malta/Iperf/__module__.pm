@@ -112,7 +112,7 @@ task 'remove' => sub {
 
   # Do NOT remove /var/lib/iperf
 
-  file [ qq{
+  file [ qw{
     /etc/default/iperf
     /etc/iperf
     /etc/systemd/system/iperf.service
@@ -124,7 +124,7 @@ task 'remove' => sub {
     command => "systemctl daemon-reload";
 
   if ( is_installed 'monit' ) {
-    file [ qq{
+    file [ qw{
       /etc/monit/conf-available/iperf
       /etc/monit/conf-enabled/iperf
     } ], ensure => 'absent';

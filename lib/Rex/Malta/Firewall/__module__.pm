@@ -82,7 +82,7 @@ task 'remove' => sub {
 
   pkg [ qw/iptables-persistent ferm/ ], ensure => 'absent';
 
-  file [ qq{
+  file [ qw{
     /etc/default/netfilter-persistent
     /etc/iptables
     /etc/default/ferm

@@ -1,5 +1,5 @@
 #
-# Configuration defaults
+# defaults
 #
 
 inventory:
@@ -36,9 +36,9 @@ network:
 # shaper:
 #   enabled:      0
 #   ifbs:         1
-#   link:         [ 1,  100Mbit, 100Mbit ]
-#   base:         [ 10,  10Mbit,  90Mbit ]
-#   misc:         [ 90:  10Mbit,  20Mbit ]
+#   link:         [ 100Mbit, 100Mbit ]
+#   base:         [  10Mbit,  90Mbit ]
+#   misc:         [  10Mbit,  20Mbit ]
 
 firewall:
   active:       1

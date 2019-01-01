@@ -25,9 +25,9 @@ sub config {
 
   $network->{shaper}{enabled} //= 0;
   $network->{shaper}{ifbs}    //= 1;
-  $network->{shaper}{link}    ||= [ 1   => qw/100Mbit 100Mbit/ ];
-  $network->{shaper}{main}    ||= [ 10  => qw/ 10Mbit  90Mbit/ ];
-  $network->{shaper}{misc}    ||= [ 90  => qw/ 10Mbit  20Mbit/ ];
+  $network->{shaper}{link}    ||= [ qw/100Mbit 100Mbit/ ];
+  $network->{shaper}{main}    ||= [ qw/ 10Mbit  90Mbit/ ];
+  $network->{shaper}{misc}    ||= [ qw/ 10Mbit  10Mbit/ ];
 
   inspect $network if Rex::Malta::DEBUG;
 
@@ -118,7 +118,7 @@ task 'setup' => sub {
   }
 
   else {
-    file [ qq{
+    file [ qw{
       /etc/modules-load.d/ifb.conf
       /etc/modprobe.d/ifb.conf
       /etc/network/shaper.sh
@@ -130,7 +130,7 @@ task 'setup' => sub {
 task 'clean' => sub {
   return unless my $network = config;
 
-  file [ qq{
+  file [ qw{
     /etc/network/if-up.d/shaper
     /etc/network/if-up.d/shaper0
     /etc/network/if-down.d/shaper
@@ -142,11 +142,11 @@ task 'clean' => sub {
 task 'remove' => sub {
   my $network = config -force;
 
-  file [ qq{
+  file [ qw{
     /etc/modules-load.d/ifb.conf
     /etc/modprobe.d/ifb.conf
     /etc/network/shaper.sh
-    } ], ensure => 'absent';
+  } ], ensure => 'absent';
 };
 
 task 'status' => sub {

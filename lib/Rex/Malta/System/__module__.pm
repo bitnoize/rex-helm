@@ -148,7 +148,7 @@ task 'setup', sub {
   }
 
   else {
-    file [ qq{
+    file [ qw{
       /etc/apt/preferences.d/60backports
       /etc/apt/sources.list.d/backports.list
     } ], ensure => 'absent';
@@ -176,7 +176,7 @@ task 'setup', sub {
   }
 
   else {
-    file [ qq{
+    file [ qw{
       /etc/apt/apt.conf.d/70extradebs
       /etc/apt/preferences.d/70extradebs
       /etc/apt/sources.list.d/extradebs.list
@@ -240,7 +240,7 @@ task 'setup', sub {
 task 'clean' => sub {
   my $system = config;
 
-  file [ qq{
+  file [ qw{
     /etc/default/rex
     /etc/default/grub.ucf-dist
 
