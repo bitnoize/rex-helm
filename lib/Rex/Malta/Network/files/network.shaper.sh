@@ -36,21 +36,27 @@ shaper_up() {
   tc class replace dev "$IFACE_ETH" parent "1:${LINK_HASH}" \
     classid "1:${MAIN_HASH}" htb rate "$MAIN_RATE" ceil "$MAIN_CEIL" prio 1
 
-  # TODO
-
   # All other traffic class
   tc class replace dev "$IFACE_ETH" parent "1:${LINK_HASH}" \
     classid "1:${MISC_HASH}" htb rate "$MISC_RATE" ceil "$MISC_CEIL" prio 9
 
   # Configure Stochastic Fairness
-  #tc qdisc replace dev "$IFACE_ETH" parent "1:${MAIN_HASH}" \
-  # handle "${MAIN_HASH}:" sfq perturb 10
+  tc qdisc replace dev "$IFACE_ETH" parent "1:${MAIN_HASH}" \
+   handle "${MAIN_HASH}:" sfq perturb 10
 
   tc qdisc replace dev "$IFACE_ETH" parent "1:${MISC_HASH}" \
     handle "${MISC_HASH}:" sfq perturb 10
 
   # Root filter
   tc filter replace dev "$IFACE_ETH" parent 1: protocol ip u32
+
+  # SSH
+  tc filter replace dev "$IFACE_ETH" parent 1: protocol ip prio 10 u32 \
+    match ip protocol 6 0xff match ip sport 22 0xffff flowid 1:10
+
+  # HTTPS
+  tc filter replace dev "$IFACE_ETH" parent 1: protocol ip prio 10 u32 \
+    match ip protocol 6 0xff match ip sport 443 0xffff flowid 1:10
 
   #
   # Ingress traffic
@@ -75,8 +81,6 @@ shaper_up() {
   tc class replace dev "$IFACE_IFB" parent "1:${LINK_HASH}" \
     classid "1:${MAIN_HASH}" htb rate "$MAIN_RATE" ceil "$MAIN_CEIL" prio 1
 
-  # TODO
-
   # All other traffic class
   tc class replace dev "$IFACE_IFB" parent "1:${LINK_HASH}" \
     classid "1:${MISC_HASH}" htb rate "$MISC_RATE" ceil "$MISC_CEIL" prio 9
@@ -90,10 +94,27 @@ shaper_up() {
 
   # Root filter
   tc filter replace dev "$IFACE_IFB" parent 1: protocol ip u32
+
+  # SSH
+  tc filter replace dev "$IFACE_ETH" parent 1: protocol ip prio 10 u32 \
+    match ip protocol 6 0xff match ip dport 22 0xffff flowid 1:10
+
+  # HTTPS
+  tc filter replace dev "$IFACE_ETH" parent 1: protocol ip prio 10 u32 \
+    match ip protocol 6 0xff match ip dport 443 0xffff flowid 1:10
 }
 
 shaper_down() {
+  #
+  # Egress traffic
+  #
+
   tc qdisc del dev "$IFACE_ETH" root &> /dev/null
+
+  #
+  # Ingress traffic
+  #
+
   tc qdisc del dev "$IFACE_ETH" handle ffff: ingress &> /dev/null
 
   tc qdisc del dev "$IFACE_IFB" root &> /dev/null
@@ -126,10 +147,15 @@ done
 
 shift $(( OPTIND-1 ))
 
+[[ "$IFACE_ETH" =~ ^tun[0-9]$ ]] || usage
+[[ "$IFACE_IFB" =~ ^ifb[0-9]$ ]] || usage
+
 # Only root can to this job
 [[ "$EUID" -eq 0 ]] || exit 2
 
-case "$1" in
+COMMAND="$1"
+
+case "$COMMAND" in
   up)
     shaper_down
     shaper_up

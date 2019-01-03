@@ -94,9 +94,9 @@ task 'status' => sub {
   my $rblcheck = config -force;
 
   run 'rblcheck', timeout => 60,
-    command => "rblcheck";
+    command => "rblcheck -q";
 
-  say "RBLCheck status:\n", last_command_output;
+  say last_command_output;
 };
 
 1;
