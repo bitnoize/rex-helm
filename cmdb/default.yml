@@ -16,14 +16,22 @@ system:
 # kernver:      ''
 # paranoid:     0
 # aptproxy:     http://127.0.0.1:9080
-  backports:    1
+# backports:    0
 # extradebs:    0
 # extralink:    http://debs.test.net
 # packages:     [ ]
   sysctl:
-    '15-ip_forward':      0
-    '25-route_localnet':  0
-    '95-disable_ipv6':    0
+    'ip_forward':
+      enabled:      0
+      name:         '15-ip_forward'
+
+    'route_localnet':
+      enabled:      0
+      name:         '25-route_localnet'
+
+    'disable_ipv6':
+      enabled:      0
+      name:         '95-disable_ipv6':
 
 # swapfile:     /swap
 # swapdize:     1024k
@@ -37,8 +45,7 @@ network:
 #   enabled:      0
 #   ifbs:         1
 #   link:         [ 100Mbit, 100Mbit ]
-#   base:         [  10Mbit,  90Mbit ]
-#   misc:         [  10Mbit,  20Mbit ]
+#   misc:         [  10Mbit,  10Mbit ]
 
 firewall:
   active:       1
@@ -54,9 +61,11 @@ monit:
   confs:
     'system':
       enabled:      1
+#     name:         system
 
     'sensors':
       enabled:      0
+#     name:         sensors
 
 collectd:
   active:       0
@@ -71,42 +80,72 @@ collectd:
   confs:
     'syslog':
       enabled:      1
+#     name:         syslog
 
     'network':
       enabled:      1
+#     name:         network
 
     'cpu':
       enabled:      1
+#     name:         cpu
 
     'memory':
       enabled:      1
+#     name:         memory
 
     'swap':    
       enabled:      1
+#     name:         swap
 
     'load':    
       enabled:      1
+#     name:         load
 
     'interface':
       enabled:      1
+#     name:         interface
 
 #   'netlink':
 #     enabled:      0
+#     name:         netlink
 
     'rrdtool': 
       enabled:      1
+#     name:         rrdtool
 
-syslog:
+rsyslog:
   active:       1
-# rsyslog:      { }
-  logrotate:
-    'apt':        1
-    'aptitude':   1
-    'dpkg':       1
-    'rsyslog':    1
-
+# confs:        { }
   monit:
     enabled:      1
+
+logrotate:
+  active:       1
+  confs:
+    'apt':
+      enabled:      1
+#     name:         apt
+
+    'aptitude':
+      enabled:      1
+#     name:         aptitude
+
+    'dpkg':
+      enabled:      1
+#     name:         dpkg
+
+    'rsyslog':
+      enabled:      1
+#     name:         rsyslog
+
+#   'monit':
+#     enabled:      1
+#     name:         monit
+
+#   'collectd':
+#     enabled:      1
+#     name:         collectd
 
 cron:
   active:       1
@@ -166,8 +205,13 @@ unbound:
 # port:         53
 # allowed:      127.0.0.1/8
   conf:
-    'qname-minimisation': 1
-    'root-auto-trust-anchor-file': 1
+    'qname-minimisation':
+      enabled:      1
+#     name:         qname-minimisation
+
+    'root-auto-trust-anchor-file':
+      enabled:      1
+#     name:         root-auto-trust-anchor-file
 
   monit:
     enabled:      1
@@ -178,11 +222,25 @@ unbound:
 nginx:
   active:       0
   conf:
-    'cache':      1
-    'gzip':       1
-    'resolver':   1
-    'ssl':        0
-    'cloudflare': 0
+    'cache':
+      enabled:      1
+#     name:         cache
+
+    'gzip':
+      enabled:      1
+#     name:         gzip
+
+    'resolver':
+      enabled:      1
+#     name:         resolver
+
+    'ssl':
+      enabled:      1
+#     name:         ssl
+
+    'cloudflare':
+      enabled:      0
+#     name:         cloudflare
 
 # snippets:     { }
 # secrets:      { }
@@ -190,8 +248,8 @@ nginx:
   sites:
     'default':
       enabled:      1
-      sample:       default
-      address:      127.0.0.1
+#     name:         default
+#     address:      127.0.0.1
 #     port:         80
  
   monit:
@@ -224,6 +282,11 @@ postfix:
   active:       0
   monit:
     enabled:      1
+
+certbot:
+  active:       0
+# options:      '--agree-tos'
+# certs:        { }
 
 rblcheck:
   active:       0

@@ -97,10 +97,10 @@ task 'remove' => sub {
 task 'status' => sub {
   my $openssh = config -force;
 
-  run 'openssh_status', timeout => 10,
+  run 'openssh_status',
     command => "/usr/sbin/service openssh status";
 
-  say "OpenSSH service status:\n", last_command_output;
+  say last_command_output;
 };
 
 1;

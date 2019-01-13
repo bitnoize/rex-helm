@@ -50,31 +50,32 @@ task 'setup' => sub {
     owner => 'root', group => 'root', mode => 600,
     content => template( "files/mysql.debian.conf" );
 
-  my $conf = $mysql->{conf};
+  for my $name ( keys %{ $mysql->{conf} } ) {
+    my $conf = $mysql->{conf}{ $name };
 
-  for my $name ( keys %$conf ) {
-    my $enabled = $conf->{ $name };
+    $conf->{enabled}  //= 0;
+    $conf->{name}     ||= $name;
 
-    if ( $enabled ) {
-      file "/etc/mysql/conf.d/$name.cnf", ensure => 'present',
+    set conf => $conf;
+
+    if ( $conf->{enabled} ) {
+      file "/etc/mysql/conf.d/$conf->{name}.cnf", ensure => 'present',
         owner => 'root', group => 'root', mode => 644,
         content => template( "files/mysql.conf.$name" );
     }
 
     else {
-      unlink "/etc/mysql/conf.d/$name.cnf";
+      file "/etc/mysql/conf.d/$conf->{name}.cnf", ensure => 'absent';
     }
   }
 
   service 'mysql', ensure => 'started';
   service 'mysql' => 'restart';
 
-  my $rootpw = $mysql->{rootpw};
-
-  if ( $rootpw ) {
-    run 'update_mysql_rootpw', timeout => 60,
-      unless  => "mysqladmin -u root -p$rootpw status",
-      command => "mysqladmin -u root password $rootpw";
+  if ( $mysql->{rootpw} ) {
+    run 'update_mysql_rootpw',
+      unless  => "mysqladmin -u root -p$mysql->{rootpw} status",
+      command => "mysqladmin -u root password $mysql->{rootpw}";
   }
 
   else {
@@ -117,14 +118,11 @@ task 'remove' => sub {
     qw/mysql-server mysql-client/
   ], ensure => 'absent';
 
-  # MySQL datadir will not removed
+  # Do NOT remove MySQL datadir
 
   file [ qw{
     /etc/default/mysql
     /etc/mysql
-    /etc/logrotate.d/mysql-server
-    /etc/monit/conf-available/mysql
-    /etc/monit/conf-enabled/mysql
   } ], ensure => 'absent';
 
   if ( is_installed 'logrotate' ) {
@@ -144,10 +142,10 @@ task 'remove' => sub {
 task 'status' => sub {
   my $mysql = config -force;
 
-  run 'mysql_status', timeout => 10,
+  run 'mysql_status',
     command => "/usr/sbin/service mysql status";
 
-  say "MySQL service status:\n", last_command_output;
+  say last_command_output;
 };
 
 1;

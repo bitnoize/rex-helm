@@ -91,10 +91,10 @@ task 'remove' => sub {
 task 'status' => sub {
   my $qemukvm = config -force;
 
-  run 'qemukvm_status', timeout => 10,
+  run 'qemukvm_status',
     command => "/usr/sbin/service libvirtd status";
 
-  say "QemuKVM service status:\n", last_command_output;
+  say last_command_output;
 };
 
 1;

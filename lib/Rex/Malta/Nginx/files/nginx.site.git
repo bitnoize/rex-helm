@@ -2,11 +2,11 @@ server {
 <%= join "\n", map { sprintf "    listen %s:%s;", $_, $site->{port} } @{ $site->{address} } %>
 <%= join "\n", map { sprintf "    server_name %s;", $_ } @{ $site->{domain} } %>
 
-    rewrite ^/(.*)$ https://$host:<%= $site->{sslport} %>/$1 permanent;
+    rewrite ^/(.*)$ https://$host:<%= $site->{ssl_port} %>/$1 permanent;
 }
 
 server {
-<%= join "\n", map { sprintf "    listen %s:%s ssl;", $_, $site->{sslport} } @{ $site->{address} } %>
+<%= join "\n", map { sprintf "    listen %s:%s ssl;", $_, $site->{ssl_port} } @{ $site->{address} } %>
 <%= join "\n", map { sprintf "    server_name %s;", $_ } @{ $site->{domain} } %>
 
     ssl_certificate     /etc/ssl/certs/<%= $site->{cert}  %>.crt;

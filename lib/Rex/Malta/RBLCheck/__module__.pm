@@ -93,8 +93,8 @@ task 'remove' => sub {
 task 'status' => sub {
   my $rblcheck = config -force;
 
-  run 'rblcheck', timeout => 60,
-    command => "rblcheck -q";
+  run 'rblcheck', timeout => 300,
+    command => "/usr/bin/rblcheck -q";
 
   say last_command_output;
 };

@@ -54,8 +54,8 @@ task 'setup' => sub {
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/iperf.service" ),
       on_change => sub {
-        run 'systemd_daemon_reload', timeout => 10,
-          command => "systemctl daemon-reload";
+        run 'systemd_reload',
+          command => "/bin/systemctl daemon-reload";
       };
 
     service 'iperf', ensure => 'started';
@@ -70,7 +70,7 @@ task 'setup' => sub {
       "/etc/systemd/system/iperf.service",
     ], ensure => 'absent';
 
-    run 'systemd_daemon_reload', timeout => 10,
+    run 'systemd_reload',
       command => "systemctl daemon-reload";
   }
 
@@ -120,7 +120,7 @@ task 'remove' => sub {
     /usr/local/bin/speedtest.run
   } ], ensure => 'absent';
 
-  run 'systemd_daemon_reload', timeout => 10,
+  run 'systemd_reload',
     command => "systemctl daemon-reload";
 
   if ( is_installed 'monit' ) {
@@ -137,7 +137,7 @@ task 'speedtest' => sub {
   return unless my $iperf = config;
 
   run 'speedtest', timeout => 3600,
-    command => "speedtest";
+    command => "/usr/local/bin/speedtest";
 };
 
 task 'status' => sub {

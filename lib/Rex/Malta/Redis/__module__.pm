@@ -113,10 +113,10 @@ task 'remove' => sub {
 task 'status' => sub {
   my $redis = config -force;
 
-  run 'redis_status', timeout => 10,
+  run 'redis_status',
     command => "/usr/sbin/service redis status";
 
-  say "Redis service status:\n", last_command_output;
+  say last_command_output;
 };
 
 1;

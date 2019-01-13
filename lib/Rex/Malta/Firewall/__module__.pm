@@ -12,9 +12,9 @@ sub config {
   return unless $config->{active} or $force;
 
   my $firewall = {
-    active      => $config->{active}    // 0,
-    type        => $config->{type}      || 'none',
-    inline      => $config->{inline}    || { },
+    active      => $config->{active}  // 0,
+    type        => $config->{type}    || 'none',
+    inline      => $config->{inline}  || { },
   };
 
   inspect $firewall if Rex::Malta::DEBUG;
@@ -93,10 +93,10 @@ task 'remove' => sub {
 task 'status' => sub {
   my $firewall = config -force;
 
-  run 'firewall_status', timeout => 10,
+  run 'firewall_status',
     command => "/sbin/iptables-save";
 
-  say "Firewall rules status:\n", last_command_output;
+  say last_command_output;
 };
 
 1;

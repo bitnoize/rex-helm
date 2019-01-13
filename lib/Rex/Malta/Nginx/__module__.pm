@@ -16,6 +16,7 @@ sub config {
     conf        => $config->{conf}      || { },
     snippets    => $config->{snippets}  || { },
     secrets     => $config->{secrets}   || { },
+    certs       => $config->{certs}     || { },
     sites       => $config->{sites}     || { },
     monit       => $config->{monit}     || { },
   };
@@ -47,102 +48,171 @@ task 'setup' => sub {
     content => template( "files/nginx.conf" );
 
   file "/etc/nginx/dhparam.pem", ensure => 'present',
-    owner => 'root', group => 'www-data', mode => 640,
-    source => "files/nginx.dhparam.pem";
+    owner => 'root', group => 'root', mode => 644,
+    content => template( "files/nginx.dhparam.pem" );
 
-  my $conf = $nginx->{conf};
+  for my $name ( keys %{ $nginx->{conf} } ) {
+    my $conf = $nginx->{conf}{ $name };
 
-  for my $name ( keys %$conf ) {
-    my $enabled = $conf->{ $name };
+    $conf->{enabled}    //= 0;
+    $conf->{name}       ||= $name;
 
-    if ( $enabled ) {
-      file "/etc/nginx/conf.d/$name.conf", ensure => 'present',
+    set 'conf' => $conf;
+
+    if ( $conf->{enabled} ) {
+      file "/etc/nginx/conf.d/$conf->{name}.conf", ensure => 'present',
         owner => 'root', group => 'root', mode => 644,
-        source => "files/nginx.conf.$name";
+        content => template( "files/nginx.conf.$name" );
     }
 
     else {
-      unlink "/etc/nginx/conf.d/$name.conf";
+      file "/etc/nginx/conf.d/$conf->{name}.conf", ensure => 'absent';
     }
   }
 
-  my $snippets = $nginx->{snippets};
+  for my $name ( keys %{ $nginx->{snippets} } ) {
+    my $snippet = $nginx->{snippets}{ $name };
 
-  for my $name ( keys %$snippets ) {
-    my $enabled = $snippets->{ $name };
+    $snippet->{enabled}   //= 0;
+    $snippet->{name}      ||= $name;
 
-    if ( $enabled ) {
-      file "/etc/nginx/snippets/$name.conf", ensure => 'present',
+    set 'snippet' => $snippet;
+
+    if ( $snippet->{enabled} ) {
+      file "/etc/nginx/snippets/$snippet->{name}.conf", ensure => 'present',
         owner => 'root', group => 'root', mode => 644,
-        source => "files/nginx.snippet.$name";
+        content => template( "files/nginx.snippet.$name" );
     }
 
     else {
-      unlink "/etc/nginx/snippets/$name.conf";
+      file "/etc/nginx/snippets/$snippet->{name}.conf", ensure => 'absent';
     }
   }
 
-  my $secrets = $nginx->{secrets};
+  my ( @secrets, @certs );
 
-  for my $name ( keys %$secrets ) {
-    my $enabled = $secrets->{ $name };
+  for my $name ( keys %{ $nginx->{secrets} } ) {
+    my $secret = $nginx->{secrets}{ $name };
 
-    if ( $enabled ) {
-      file "/etc/nginx/$name.secrets", ensure => 'present',
-        owner => 'root', group => 'www-data', mode => 640,
-        source => "files/nginx.secrets.$name";
+    $secret->{enabled}  //= 0;
+    $secret->{name}     ||= $name;
+    $secret->{source}   ||= 'native';
+
+    set 'secret' => $secret;
+
+    case $secret->{source}, {
+      native => sub {
+        if ( $secret->{enabled} ) {
+          file "/etc/nginx/$secret->{name}.secrets", ensure => 'present',
+            owner => 'root', group => 'www-data', mode => 640,
+            content => template( "files/nginx.secrets.$name" );
+
+          push @secrets, $name;
+        }
+
+        else {
+          file "/etc/nginx/$secret->{name}.secrets", ensure => 'absent';
+        }
+      },
+
+      default => sub {
+        die "Unknown Nginx secret source\n";
+      }
     }
+  }
 
-    else {
-      unlink "/etc/nginx/$name.secrets";
+  for my $name ( keys %{ $nginx->{certs} } ) {
+    my $cert = $nginx->{certs}{ $name };
+
+    $cert->{enabled}    //= 0;
+    $cert->{name}       ||= $name;
+    $cert->{source}     ||= 'native';
+
+    set 'certificate' => $cert;
+
+    case $cert->{source}, {
+      native => sub {
+        if ( $cert->{enabled} ) {
+          file "/etc/ssl/certs/$cert->{name}.crt", ensure => 'present',
+            owner => 'root', group => 'www-data', mode => 644,
+            source => "files/nginx.cert.$name.crt";
+     
+          file "/etc/ssl/private/$cert->{name}.key", ensure => 'present',
+            owner => 'root', group => 'www-data', mode => 640,
+            source => "files/nginx.cert.$name.key";
+
+          push @certs, $name;
+        }
+
+        else {
+          file "/etc/ssl/certs/$cert->{name}.crt", ensure => 'absent';
+          file "/etc/ssl/private/$cert->{name}.key", ensure => 'absent';
+        }
+      },
+
+      certbot => sub {
+        if ( $cert->{enabled} ) {
+          push @certs, $name if is_dir "/etc/letsencrypt/live/$cert->{name}";
+        }
+      },
+
+      default => sub {
+        die "Unknown Nginx certificate source\n";
+      }
     }
   }
 
   file "/var/www/default", ensure => 'directory',
     owner => 'root', group => 'www-data', mode => 755;
 
-  my $sites = $nginx->{sites};
+  for my $name ( keys %{ $nginx->{sites} } ) {
+    my $site = $nginx->{sites}{ $name };
 
-  for my $name ( keys %$sites ) {
-    my $site = $sites->{ $name };
-    $site->{name} = $name;
-
-    $site->{enabled}  //= 0;
-    $site->{sample}   ||= "default";
-    $site->{domain}   ||= "_";
-    $site->{address}  ||= "127.0.0.1";
-    $site->{port}     ||= 80;
-    $site->{sslport}  ||= 443;
-    $site->{cert}     ||= "";
+    $site->{enabled}    //= 0;
+    $site->{name}       ||= $name;
+    $site->{domain}     ||= "\"\"";
+    $site->{address}    ||= "127.0.0.1";
+    $site->{port}       ||= 80;
+    $site->{ssl_port}   ||= 443;
+    $site->{secret}     ||= "";
+    $site->{cert}       ||= "";
 
     for ( qw/domain address/ ) {
       $site->{ $_ } = [ $site->{ $_ } ]
         unless ref $site->{ $_ } eq 'ARRAY';
     }
 
-    set site => $site;
+    set 'site' => $site;
 
-    file "/etc/nginx/sites-available/$name", ensure => 'present',
-      owner => 'root', group => 'root', mode => 644,
-      content => template( "files/nginx.site.$site->{sample}" );
+    if ( $site->{secret} ) {
+      unless ( grep { $_ eq $site->{secret} } @secrets ) {
+        Rex::Logger::info( "Nginx secret $site->{secret} not ready" => 'warn' );
 
-    if ( $site->{enabled} ) {
-      symlink "/etc/nginx/sites-available/$name",
-        "/etc/nginx/sites-enabled/$name";
-    }
-
-    else {
-      unlink "/etc/nginx/sites-enabled/$name";
+        $site->{enabled} = 0;
+      }
     }
 
     if ( $site->{cert} ) {
-      file "/etc/ssl/certs/$site->{cert}.crt", ensure => 'present',
-        owner => 'root', group => 'www-data', mode => 644,
-        source => "files/nginx.cert.$site->{cert}.crt";
+      unless ( grep { $_ eq $site->{cert} } @certs ) {
+        Rex::Logger::info( "Nginx cert $site->{cert} not ready" => 'warn' );
 
-      file "/etc/ssl/private/$site->{cert}.key", ensure => 'present',
-        owner => 'root', group => 'www-data', mode => 640,
-        source => "files/nginx.cert.$site->{cert}.key";
+        $site->{enabled} = 0;
+      }
+    }
+
+    Rex::Logger::info( "Install Nginx site '$site->{name}'" );
+
+    file "/etc/nginx/sites-available/$site->{name}", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/nginx.site.$name" );
+
+    if ( $site->{enabled} ) {
+      symlink "/etc/nginx/sites-available/$site->{name}",
+        "/etc/nginx/sites-enabled/$site->{name}";
+    }
+
+    else {
+      unlink "/etc/nginx/sites-enabled/$site->{name}";
     }
   }
 
@@ -217,10 +287,10 @@ task 'remove' => sub {
 task 'status' => sub {
   my $nginx = config -force;
 
-  run 'nginx_status', timeout => 10,
+  run 'nginx_status',
     command => "/usr/sbin/service nginx status";
 
-  say "Nginx service status:\n", last_command_output;
+  say last_command_output;
 };
 
 1;

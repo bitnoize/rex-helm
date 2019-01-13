@@ -62,26 +62,25 @@ task 'setup' => sub {
     owner => 'root', group => 'root', mode => 600,
     source => "files/monit.pem";
 
-  my $confs = $monit->{confs};
+  for my $name ( keys %{ $monit->{confs} } ) {
+    my $conf = $monit->{confs}{ $name };
 
-  for my $name ( keys %$confs ) {
-    my $conf = $confs->{ $name };
-
-    $conf->{enabled} //= 0;
+    $conf->{enabled}  //= 0;
+    $conf->{name}     ||= $name;
 
     set conf => $conf;
 
-    file "/etc/monit/conf-available/$name", ensure => 'present',
+    file "/etc/monit/conf-available/$conf->{name}", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/monit.conf.$name" );
 
     if ( $conf->{enabled} ) {
-      symlink "/etc/monit/conf-available/$name",
-        "/etc/monit/conf-enabled/$name";
+      symlink "/etc/monit/conf-available/$conf->{name}",
+        "/etc/monit/conf-enabled/$conf->{name}";
     }
 
     else {
-      unlink "/etc/monit/conf-enabled/$name";
+      unlink "/etc/monit/conf-enabled/$conf->{name}";
     }
   }
 
@@ -137,10 +136,10 @@ task 'remove' => sub {
 task 'status' => sub {
   my $monit = config -force;
 
-  run 'monit_status', timeout => 10,
+  run 'monit_status',
     command => "/usr/bin/monit status";
 
-  say "Monit service status:\n", last_command_output;
+  say last_command_output;
 };
 
 1;

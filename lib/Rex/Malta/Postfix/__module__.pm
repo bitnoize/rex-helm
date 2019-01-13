@@ -51,10 +51,10 @@ task 'remove' => sub {
 task 'status' => sub {
   my $postfix = config -force;
 
-  run 'postfix_status', timeout => 10,
+  run 'postfix_status',
     command => "/usr/sbin/service postfix status";
 
-  say "Postfix service status:\n", last_command_output;
+  say last_command_output;
 };
 
 1;

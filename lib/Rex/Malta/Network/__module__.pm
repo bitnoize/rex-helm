@@ -26,7 +26,6 @@ sub config {
   $network->{shaper}{enabled} //= 0;
   $network->{shaper}{ifbs}    //= 1;
   $network->{shaper}{link}    ||= [ qw/100Mbit 100Mbit/ ];
-  $network->{shaper}{main}    ||= [ qw/ 10Mbit  90Mbit/ ];
   $network->{shaper}{misc}    ||= [ qw/ 10Mbit  10Mbit/ ];
 
   inspect $network if Rex::Malta::DEBUG;
@@ -53,10 +52,8 @@ task 'setup' => sub {
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/interfaces" );
 
-  my $ethernet = $network->{ethernet};
-
-  if ( keys %$ethernet ) {
-    set ethernet => $ethernet;
+  if ( keys %{ $network->{ethernet} } ) {
+    set ethernet => $network->{ethernet};
 
     file "/etc/network/interfaces.d/ethernet", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
@@ -70,12 +67,10 @@ task 'setup' => sub {
     file "/etc/network/interfaces.d/ethernet", ensure => 'absent';
   }
 
-  my $bridge = $network->{bridge};
-
-  if ( keys %$bridge ) {
+  if ( keys %{ $network->{bridge} } ) {
     pkg [ qw/bridge-utils/ ], ensure => "present";
 
-    set bridge => $bridge;
+    set bridge => $network->{bridge};
 
     file "/etc/network/interfaces.d/bridge", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
@@ -160,10 +155,10 @@ task 'shaper' => sub {
   die "Param --iface with interface name required\n"
     unless my $iface = param_lookup 'iface';
 
-  run 'shaper_details', timeout => 10,
+  run 'shaper_details',
     command => template( "\@shaper_details", iface => $iface );
 
-  say "Shaper details for iface: '$iface'\n", last_command_output;
+  say last_command_output;
 };
 
 1;

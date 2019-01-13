@@ -79,17 +79,17 @@ task 'remove' => sub {
 task 'status' => sub {
   my $ntp = config -force;
 
-  run 'ntp_status', timeout => 10,
-    command => "ntpq -p";
+  run 'ntp_status',
+    command => "/usr/bin/ntpq -p";
 
-  say "NTP service status:\n", last_command_output;
+  say last_command_output;
 };
 
 task 'sync' => sub {
   my $ntp = config -force;
 
   run 'sntp_sync', timeout => 60,
-    command => "sntp -s pool.ntp.org && hwclock -w";
+    command => "/usr/bin/sntp -s pool.ntp.org && hwclock -w";
 };
 
 1;

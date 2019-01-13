@@ -55,11 +55,6 @@ task 'setup' => sub {
       comment => "mmonit";
   }
 
-  # FIXME
-  file "/root/mmonit.sh", ensure => 'present',
-    owner => 'root', group => 'root', mode => 644,
-    content => template( "\@mmonit_install" );
-
   run 'mmonit_install', timeout => 900,
     command => template( "\@mmonit_install" );
 
@@ -75,15 +70,15 @@ task 'setup' => sub {
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/tmpfiles.mmonit" );
 
-  run 'systemd_tmpfiles', timeout => 10,
-    command => "systemd-tmpfiles --create /etc/tmpfiles.d/mmonit.conf";
+  run 'systemd_tmpfiles',
+    command => "/bin/systemd-tmpfiles --create /etc/tmpfiles.d/mmonit.conf";
 
   file "/etc/systemd/system/mmonit.service", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/mmonit.service" ),
     on_change => sub {
-      run 'systemd_daemon_reload', timeout => 10,
-        command => "systemctl daemon-reload";
+      run 'systemd_reload',
+        command => "/bin/systemctl daemon-reload";
     };
 
   file "$mmonit->{workdir}/conf/server.xml", ensure => 'present',
@@ -106,19 +101,19 @@ task 'clean' => sub {
 task 'remove' => sub {
   my $mmonit = config -force;
 
-  run 'kill_mmonit', timeout => 10,
-    command => template( "\@kill_mmonit" );
+  run 'kill_mmonit',
+    command => "/usr/bin/killall -9 --user mmonit";
 
   delete_user  'mmonit' if get_uid 'mmonit';
   delete_group 'mmonit' if get_gid 'mmonit';
 
-  run 'systemd_tmpfiles', timeout => 10,
-    command => "systemd-tmpfiles --remove /etc/tmpfiles.d/mmonit.conf";
+  run 'systemd_tmpfiles',
+    command => "/bin/systemd-tmpfiles --remove /etc/tmpfiles.d/mmonit.conf";
 
   file "/etc/systemd/system/mmonit.service", ensure => 'absent',
     on_change => sub {
-      run 'systemd_daemon_reload', timeout => 10,
-        command => "systemctl daemon-reload";
+      run 'systemd_reload',
+        command => "/bin/systemctl daemon-reload";
     };
 
   file [ qw{
@@ -131,10 +126,10 @@ task 'remove' => sub {
 task 'status' => sub {
   my $mmonit = config -force;
 
-  run 'mmonit_status', timeout => 10,
+  run 'mmonit_status',
     command => "/usr/sbin/service mmonit status";
 
-  say "MMonit service status:\n", last_command_output;
+  say last_command_output;
 };
 
 1;
@@ -163,9 +158,5 @@ chown -R mmonit:mmonit "<%= $mmonit->{workdir} %>/logs"
 
 echo "Done MMonit install"
 echo "$( date +%s )" > "/root/mmonit.state"
-@end
-
-@kill_mmonit
-/usr/bin/killall -9 --user mmonit
 @end
 

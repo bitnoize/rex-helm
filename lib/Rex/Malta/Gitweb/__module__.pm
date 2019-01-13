@@ -46,8 +46,6 @@ task 'remove' => sub {
 
   pkg [ qw/gitweb highlight/ ], ensure => 'absent';
 
-  # Do NOT remove projectroot directory
-
   file [ "/etc/gitweb.conf", ], ensure => 'absent';
 };
 

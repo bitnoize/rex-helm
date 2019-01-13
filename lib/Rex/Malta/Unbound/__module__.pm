@@ -55,19 +55,22 @@ task 'setup' => sub {
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/unbound.conf" );
 
-  my $conf = $unbound->{conf};
+  for my $name ( keys %{ $unbound->{conf} } ) {
+    my $conf = $unbound->{conf}{ $name };
 
-  for my $name ( keys %$conf ) {
-    my $enabled = $conf->{ $name };
+    $conf->{enabled}  //= 0;
+    $conf->{name}     ||= $name;
 
-    if ( $enabled ) {
-      file "/etc/unbound/unbound.conf.d/$name.conf", ensure => 'present',
+    set conf => $conf;
+
+    if ( $conf->{enabled} ) {
+      file "/etc/unbound/unbound.conf.d/$conf->{name}.conf", ensure => 'present',
         owner => 'root', group => 'root', mode => 644,
         content => template( "files/unbound.conf.$name" );
     }
 
     else {
-      unlink "/etc/unbound/unbound.conf.d/$name.conf";
+      file "/etc/unbound/unbound.conf.d/$conf->{name}.conf", ensure => 'absent';
     }
   }
 
@@ -122,10 +125,10 @@ task 'remove' => sub {
 task 'status' => sub {
   my $unbound = config -force;
 
-  run 'unbound_status', timeout => 10,
+  run 'unbound_status',
     command => "/usr/sbin/service unbound status";
 
-  say "Unbound service status:\n", last_command_output;
+  say last_command_output;
 };
 
 1;

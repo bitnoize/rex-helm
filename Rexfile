@@ -48,7 +48,8 @@ set 'modules' => [
 
   'Monit',      # Service monitoring
   'Collectd',   # Collect and visualize various metrics
-  'Syslog',     # Syslog facility
+  'Rsyslog',    # Rsyslog facility
+  'Logrotate',  # Rotating logs
   'Cron',       # Cron scheduler
   'OpenSSH',    # OpenSSH service
   'NTP',        # Network Time Protocol
@@ -62,11 +63,11 @@ set 'modules' => [
   'Redis',      # Redis in-memory storage
   'Postfix',    # Postfix mailer
 
+  'Certbot',    # LetsEncrypt certificate management
   'RBLCheck',   # RBLCheck script
   'Freight',    # Deb repositories for busy people
   'Rsync',      # Remote sync
   'MMonit',     # Monit combiner
-# 'CollectdWeb',# Collectd front-end
   'CGP',        # Collectd front-end
   'Gitweb',     # Gitweb service
 ];

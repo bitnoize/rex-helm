@@ -56,23 +56,26 @@ task 'setup' => sub {
       content => template( "files/collectd.passwd" );
   }
 
-  my $confs = $collectd->{confs};
+  else {
+    file "/etc/collectd/passwd", ensure => 'absent';
+  }
 
-  for my $name ( keys %$confs ) {
-    my $conf = $confs->{ $name };
+  for my $name ( keys %{ $collectd->{confs} } ) {
+    my $conf = $collectd->{confs}{ $name };
 
     $conf->{enabled}  //= 0;
+    $conf->{name}     ||= $name;
 
     set conf => $conf;
 
     if ( $conf->{enabled} ) {
-      file "/etc/collectd/collectd.conf.d/$name.conf", ensure => 'present',
+      file "/etc/collectd/collectd.conf.d/$conf->{name}.conf", ensure => 'present',
         owner => 'root', group => 'root', mode => 644,
         content => template( "files/collectd.conf.$name" );
     }
 
     else {
-      unlink "/etc/collectd/collectd.conf.d/$name.conf";
+      file "/etc/collectd/collectd.conf.d/$conf->{name}.conf", ensure => 'absent';
     }
   }
 
@@ -98,8 +101,8 @@ task 'clean' => sub {
 task 'remove' => sub {
   my $collectd = config -force;
 
-# run "kill_collectd", timeout => 10,
-#   command => template( "\@kill_collectd" );
+  #run "kill_collectd",
+  # command => "/usr/bin/killall -9 collectd";
 
   pkg [ qw/collectd collectd-core/ ], ensure => 'absent';
 
@@ -114,17 +117,10 @@ task 'remove' => sub {
 task 'status' => sub {
   my $collectd = config -force;
 
-  run 'collectd_status', timeout => 10,
+  run 'collectd_status',
     command => "/usr/sbin/service collectd status";
 
-  say "Collectd service status:\n", last_command_output;
+  say last_command_output;
 };
 
 1;
-
-__DATA__
-
-@kill_collectd
-/usr/bin/killall -9 collectd
-@end
-

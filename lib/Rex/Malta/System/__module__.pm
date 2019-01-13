@@ -65,7 +65,7 @@ task 'stamp', sub {
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/hosts", system => $system );
 
-  run 'update_hostname', timeout => 10,
+  run 'update_hostname',
     command => "hostname -F /etc/hostname";
 };
 
@@ -75,7 +75,7 @@ task 'setup', sub {
   if ( $system->{rootpw} ) {
     my $passwd = join ':', 'root', $system->{rootpw};
 
-    run 'rootpw_chpasswd', timeout => 10,
+    run 'rootpw_chpasswd',
       command => sprintf "echo '%s' | chpasswd", $passwd;
   }
 
@@ -84,19 +84,18 @@ task 'setup', sub {
       owner => 'root', group => 'root', mode => 644,
       content => template( "files/default.grub" );
 
-    run 'grub_update', timeout => 10,
-      command => "update-grub";
+    run 'grub_update', command => "update-grub";
   }
 
   file "/etc/timezone", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
     content => $system->{timezone};
 
-  run 'tzdata_configure', timeout => 10,
+  run 'tzdata_configure',
     command => "dpkg-reconfigure -f noninteractive tzdata";
 
   my $banner = LOCAL {
-    run 'banner_figlet', timeout => 10,
+    run 'banner_figlet',
       command => sprintf "figlet -k %s", $system->{hostname};
   };
 
@@ -189,7 +188,7 @@ task 'setup', sub {
   my @packages = (
     qw/procps psmisc sysfsutils attr tzdata aptitude htop/,
     qw/sudo vim curl wget git netcat-openbsd rsync/,
-    qw/bash-completion dnsutils/
+    qw/bash-completion dnsutils openssl/
   );
 
   push @packages, @{ $system->{packages} };
@@ -211,30 +210,30 @@ task 'setup', sub {
 
   file "/etc/sysctl.conf", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
-    content => template( "files/sysctl.conf" ),
-    on_change => sub {
-    };
+    content => template( "files/sysctl.conf" );
 
   symlink "/etc/sysctl.conf", "/etc/sysctl.d/99-sysctl.conf";
 
-  my $sysctl = $system->{sysctl};
+  for my $name ( keys %{ $system->{sysctl} } ) {
+    my $sysctl = $system->{sysctl}{ $name };
 
-  for my $name ( keys %$sysctl ) {
-    my $enabled = $sysctl->{ $name };
+    $sysctl->{enabled}  //= 0;
+    $sysctl->{name}     ||= $name;
 
-    if ( $enabled ) {
-      file "/etc/sysctl.d/$name.conf", ensure => 'present',
+    set sysctl => $sysctl;
+
+    if ( $sysctl->{enabled} ) {
+      file "/etc/sysctl.d/$sysctl->{name}.conf", ensure => 'present',
         owner => 'root', group => 'root', mode => 644,
         content => template( "files/sysctl.conf.$name" );
     }
 
     else {
-      unlink "/etc/sysctl.d/$name.conf";
+      file "/etc/sysctl.d/$sysctl->{name}.conf", ensure => 'absent';
     }
-
-    run 'sysctl_reload', timeout => 10,
-      command => "sysctl --system";
   }
+
+  run 'sysctl_reload', command => "/sbin/sysctl --system";
 };
 
 task 'clean' => sub {
@@ -267,7 +266,7 @@ task 'monit' => sub {
 
   die "Monit is not installed\n" unless is_installed 'monit';
 
-  run 'monit_system_status', timeout => 10,
+  run 'monit_system_status',
     command => sprintf "monit status %s", $system->{hostname};
 
   say last_command_output;
@@ -283,9 +282,7 @@ task 'swapon' => sub {
   return Rex::Logger::info( "Swap $system->{swapfile} exists" => 'warn' )
     if is_file $system->{swapfile};
 
-  run 'swapon' => timeout => 300,
-    command => template( "\@swapon" );
-
+  run 'swapon' => timeout => 300, command => template( "\@swapon" );
   say last_command_output if Rex::Malta::DEBUG;
 };
 
@@ -298,9 +295,7 @@ task 'swapoff' => sub {
   return Rex::Logger::info( "Swap $system->{swapfile} missing" => 'warn' )
     unless is_file $system->{swapfile};
 
-  run 'swapoff', timeout => 300,
-    command => template( "\@swapoff" );
-
+  run 'swapoff', timeout => 300, command => template( "\@swapoff" );
   say last_command_output if Rex::Malta::DEBUG;
 };
 
@@ -319,8 +314,7 @@ task 'sensors' => sub {
 task 'firsttime' => sub {
   my $system = config -force;
 
-  run 'firsttime', timeout => 900,
-    command => template( "\@firsttime" );
+  run 'firsttime', timeout => 900, command => template( "\@firsttime" );
 };
 
 1;

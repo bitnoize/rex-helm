@@ -46,6 +46,9 @@ task 'clean' => sub {
 task 'remove' => sub {
   my $cgp = config -force;
 
+  #pkg [ qw/rrdtool php-fpm/ ], ensure => 'present';
+
+  file [ $cgp->{workdir} ], ensure => 'absent';
 };
 
 task 'status' => sub {

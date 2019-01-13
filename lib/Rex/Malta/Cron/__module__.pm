@@ -44,36 +44,43 @@ task 'setup', sub {
   file [ "/var/spool/cron" ], ensure => 'directory',
     owner => 'root', group => 'root', mode => 755;
 
-  my $crontab = $cron->{crontab};
+  for my $name ( keys %{ $cron->{crontab} } ) {
+    my $crontab = $cron->{crontab}{ $name };
 
-  for my $name ( keys %$crontab ) {
-    my $enabled = $crontab->{ $name };
+    $crontab->{enabled} //= 0;
+    $crontab->{name}    ||= $name;
 
-    if ( $enabled ) {
-      file "/etc/cron.d/$name", ensure => 'present',
+    set crontab => $crontab;
+
+    if ( $crontab->{enabled} ) {
+      file "/etc/cron.d/$crontab->{name}", ensure => 'present',
         owner => 'root', group => 'root', mode => 644,
         source => "files/crontab.$name";
     }
 
     else {
-      unlink "/etc/cron.d/$name";
+      file "/etc/cron.d/$crontab->{name}", ensure => 'absent';
     }
   }
 
   for my $period ( qw/hourly daily weekly monthly/ ) {
-    my $conf = $cron->{ $period };
+    for my $name ( keys %{ $cron->{ $period } } ) {
+      my $script = $cron->{ $period }{ $name };
 
-    for my $name ( keys %$conf ) {
-      my $enabled = $conf->{ $name };
+      $script->{enabled}  //= 0;
+      $script->{name}     ||= $name;
 
-      if ( $enabled ) {
-        file "/etc/cron.$period/$name", ensure => 'present',
+      set script => $script;
+
+
+      if ( $script->{enabled} ) {
+        file "/etc/cron.$period/$script->{name}", ensure => 'present',
           owner => 'root', group => 'root', mode => 644,
           source => "files/cron.$period.$name";
       }
 
       else {
-        unlink "/etc/cron.$period/$name";
+        file "/etc/cron.$period/$script->{name}", ensure => 'absent';
       }
     }
   }
@@ -122,10 +129,10 @@ task 'remove' => sub {
 task 'status' => sub {
   my $cron = config -force;
 
-  run 'cron_status', timeout => 10,
+  run 'cron_status',
     command => "/usr/sbin/service cron status";
 
-  say "Cron service status:\n", last_command_output;
+  say last_command_output;
 };
 
 1;

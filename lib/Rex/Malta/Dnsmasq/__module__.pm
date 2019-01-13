@@ -56,19 +56,22 @@ task 'setup' => sub {
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/dnsmasq.conf" );
 
-  my $conf = $dnsmasq->{conf};
+  for my $name ( keys %{ $dnsmasq->{conf} } ) {
+    my $conf = $dnsmasq->{conf}{ $name };
 
-  for my $name ( keys %$conf ) {
-    my $enabled = $conf->{ $name };
+    $conf->{enabled}  //= 0;
+    $conf->{name}     ||= $name;
 
-    if ( $enabled ) {
-      file "/etc/dnsmasq.d/$name", ensure => 'present',
+    set conf => $conf;
+
+    if ( $conf->{enabled} ) {
+      file "/etc/dnsmasq.d/$conf->{name}", ensure => 'present',
         owner => 'root', group => 'root', mode => 644,
         content => template( "files/dnsmasq.conf.$name" );
     }
 
     else {
-      unlink "/etc/dnsmasq.d/$name";
+      file "/etc/dnsmasq.d/$conf->{name}", ensure => 'absent';
     }
   }
 
@@ -122,10 +125,10 @@ task 'remove' => sub {
 task 'status' => sub {
   my $dnsmasq = config -force;
 
-  run 'dnsmasq_status', timeout => 10,
+  run 'dnsmasq_status',
     command => "/usr/sbin/service dnsmasq status";
 
-  say "Dnsmasq service status:\n", last_command_output;
+  say last_command_output;
 };
 
 1;
