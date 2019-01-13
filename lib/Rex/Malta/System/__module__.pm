@@ -342,12 +342,13 @@ apt-get -y --purge remove \
   task-english task-ssh-server xauth rblcheck strace  \
   eject laptop-detect resolvconf vim-tiny netcat-traditional  \
   aptitude-doc-en apt-listchanges python-apt python-apt-common  \
-  debconf-utils installation-report reportbug python-reportbug  \
+  debconf-utils installation-report reportbug python3-reportbug  \
   debian-faq doc-debian docutils-doc info install-info texinfo  \
   bc dc nano emacsen-common mutt gnupg2 w3m krb5-locales  \
   nfs-common rpcbind host ftp telnet iproute tcpd python-debian \
   dictionaries-common iamerican ibritish ienglish-common wamerican  \
   exim4 exim4-base exim4-config exim4-daemon-light bsd-mailx procmail \
+  distro-info-data konwert konwert-filters re mueller7-dict \
   lockfile-progs rename xdg-user-dirs hicolor-icon-theme \
   libcgi-fast-perl libcgi-pm-perl libfcgi-perl \
   libclass-accessor-perl libclass-c3-perl libclass-c3-xs-perl libclass-isa-perl \

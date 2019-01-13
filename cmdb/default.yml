@@ -31,7 +31,7 @@ system:
 
     'disable_ipv6':
       enabled:      0
-      name:         '95-disable_ipv6':
+      name:         '95-disable_ipv6'
 
 # swapfile:     /swap
 # swapdize:     1024k
@@ -251,12 +251,20 @@ nginx:
 #     name:         default
 #     address:      127.0.0.1
 #     port:         80
+#     ssl_port:     443
+#     secret:       ''
+#     cert:         ''
  
   monit:
     enabled:      1
 #   address:      127.0.0.1
 #   port:         80
 #   timeout:      10
+
+certbot:
+  active:       0
+# options:      '--agree-tos'
+# certs:        { }
 
 mysql:
   active:       0
@@ -282,11 +290,6 @@ postfix:
   active:       0
   monit:
     enabled:      1
-
-certbot:
-  active:       0
-# options:      '--agree-tos'
-# certs:        { }
 
 rblcheck:
   active:       0

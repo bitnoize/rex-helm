@@ -59,11 +59,11 @@ set 'modules' => [
   'Dnsmasq',    # Dnsmasq daemon
   'Unbound',    # Unbound daemon
   'Nginx',      # Nginx fase web server
+  'Certbot',    # Certificate management
   'MySQL',      # MySQL service
   'Redis',      # Redis in-memory storage
   'Postfix',    # Postfix mailer
 
-  'Certbot',    # LetsEncrypt certificate management
   'RBLCheck',   # RBLCheck script
   'Freight',    # Deb repositories for busy people
   'Rsync',      # Remote sync

@@ -184,35 +184,46 @@ task 'setup' => sub {
 
     set 'site' => $site;
 
-    if ( $site->{secret} ) {
-      unless ( grep { $_ eq $site->{secret} } @secrets ) {
-        Rex::Logger::info( "Nginx secret $site->{secret} not ready" => 'warn' );
-
-        $site->{enabled} = 0;
-      }
-    }
-
-    if ( $site->{cert} ) {
-      unless ( grep { $_ eq $site->{cert} } @certs ) {
-        Rex::Logger::info( "Nginx cert $site->{cert} not ready" => 'warn' );
-
-        $site->{enabled} = 0;
-      }
-    }
-
-    Rex::Logger::info( "Install Nginx site '$site->{name}'" );
-
-    file "/etc/nginx/sites-available/$site->{name}", ensure => 'present',
-      owner => 'root', group => 'root', mode => 644,
-      content => template( "files/nginx.site.$name" );
-
     if ( $site->{enabled} ) {
-      symlink "/etc/nginx/sites-available/$site->{name}",
-        "/etc/nginx/sites-enabled/$site->{name}";
+      Rex::Logger::info( "Install Nginx site '$site->{name}'" );
+
+      file "/etc/nginx/sites-available/$site->{name}", ensure => 'present',
+        owner => 'root', group => 'root', mode => 644,
+        content => template( "files/nginx.site.$name" );
+
+      my $site_ready = 1;
+
+      if ( $site->{secret} ) {
+        unless ( grep { $_ eq $site->{secret} } @secrets ) {
+          Rex::Logger::info( "Nginx secret $site->{secret} not ready" => 'warn' );
+
+          $site_ready = 0;
+        }
+      }
+
+      if ( $site->{cert} ) {
+        unless ( grep { $_ eq $site->{cert} } @certs ) {
+          Rex::Logger::info( "Nginx cert $site->{cert} not ready" => 'warn' );
+
+          $site_ready = 0;
+        }
+      }
+
+      if ( $site_ready ) {
+        symlink "/etc/nginx/sites-available/$site->{name}",
+          "/etc/nginx/sites-enabled/$site->{name}";
+      }
+
+      else {
+        unlink "/etc/nginx/sites-enabled/$site->{name}";
+      }
     }
 
     else {
-      unlink "/etc/nginx/sites-enabled/$site->{name}";
+      file [
+        "/etc/nginx/sites-available/$site->{name}",
+        "/etc/nginx/sites-enabled/$site->{name}",
+      ], ensure => 'absent';
     }
   }
 

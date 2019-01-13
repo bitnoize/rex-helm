@@ -38,15 +38,16 @@ task 'setup' => sub {
     $cert->{domain} = [ $cert->{domain} ]
       unless ref $cert->{domain} eq 'ARRAY';
 
-    die "Malformed Certbot '$name' domain\n"
-      unless @{ $cert->{domain} };
-
     set 'certificate' => $cert;
 
-    run 'certbot_certonly', timeout => 60,
-      command => template( "\@certbot_certonly" );
+    if ( $cert->{enabled} ) {
+      die "Malformed Certbot '$name' domain\n" unless @{ $cert->{domain} };
 
-    say last_command_output;
+      run 'certbot_certonly', timeout => 60,
+        command => template( "\@certbot_certonly" );
+
+      say last_command_output if $?;
+    }
   }
 };
 
