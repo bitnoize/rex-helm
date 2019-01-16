@@ -59,7 +59,7 @@ set 'modules' => [
   'Dnsmasq',    # Dnsmasq daemon
   'Unbound',    # Unbound daemon
   'Nginx',      # Nginx fase web server
-  'Certbot',    # Certificate management
+  'PKI',        # Public Key Infrastructure
   'MySQL',      # MySQL service
   'Redis',      # Redis in-memory storage
   'Postfix',    # Postfix mailer

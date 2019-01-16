@@ -23,6 +23,7 @@ sub config {
     address     => $config->{address}   || "127.0.0.1",
     port        => $config->{port}      || "3127",
     schema      => $config->{schema}    || "postgresql://monit:monit\@127.0.0.1/mmonit",
+    cert        => $config->{cert}      || "",
     owner       => $config->{owner}     || "Unknown",
     license     => $config->{license}   || "none",
   };
@@ -34,7 +35,8 @@ sub config {
   $mmonit->{archive} = sprintf ARCHIVE, @$mmonit{ qw/version platform/ };
   $mmonit->{scrappy} = sprintf SCRAPPY, $mmonit->{version};
 
-  $mmonit->{cert} = "$mmonit->{workdir}/conf/mmonit.pem";
+  $mmonit->{path_fullcert}    = "$mmonit->{workdir}/conf/mmonit.pem";
+  $mmonit->{path_conf_server} = "$mmonit->{workdir}/conf/server.xml";
 
   inspect $mmonit if Rex::Malta::DEBUG;
 
@@ -43,6 +45,9 @@ sub config {
 
 task 'setup' => sub {
   return unless my $mmonit = config;
+
+  return Rex::Logger::info( "MMonit cert not ready yet" => 'warn' )
+    unless my $cert = Rex::Malta::PKI::certificate( $mmonit->{cert} );
 
   unless ( get_gid 'mmonit' ) {
     create_group 'mmonit', system => 1;
@@ -58,20 +63,18 @@ task 'setup' => sub {
   run 'mmonit_install', timeout => 900,
     command => template( "\@mmonit_install" );
 
-  file "/root/mmonit.log", ensure => 'present',
-    owner => 'root', group => 'root', mode => 644,
-    content => last_command_output;
+  if ( $? ) {
+    Rex::Logger::info( "MMonit setup failed: $?" => 'error' );
 
-  file "/etc/security/limits.d/mmonit.conf", ensure => 'present',
-    owner => 'root', group => 'root', mode => 644,
-    content => template( "files/limits.mmonit" );
+    say last_command_output if Rex::Malta::DEBUG;
+  }
 
   file "/etc/tmpfiles.d/mmonit.conf", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/tmpfiles.mmonit" );
 
   run 'systemd_tmpfiles',
-    command => "/bin/systemd-tmpfiles --create /etc/tmpfiles.d/mmonit.conf";
+    command => template( "\@mmonit_tmpfiles" );
 
   file "/etc/systemd/system/mmonit.service", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
@@ -81,13 +84,16 @@ task 'setup' => sub {
         command => "/bin/systemctl daemon-reload";
     };
 
-  file "$mmonit->{workdir}/conf/server.xml", ensure => 'present',
+  my $fullcert = join "\n",
+    cat( $cert->{path_crt} ), cat( $cert->{path_key} );
+
+  file "$mmonit->{path_fullcert}", ensure => 'present',
+    owner => 'mmonit', group => 'mmonit', mode => 600,
+    content => $fullcert;
+
+  file "$mmonit->{path_conf_server}", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/mmonit.conf.server" );
-
-  file "$mmonit->{workdir}/conf/mmonit.pem", ensure => 'present',
-    owner => 'mmonit', group => 'mmonit', mode => 600,
-    source => "files/mmonit.pem";
 
   service 'mmonit', ensure => 'started';
   service 'mmonit' => 'restart';
@@ -96,6 +102,10 @@ task 'setup' => sub {
 task 'clean' => sub {
   return unless my $mmonit = config;
 
+  file [ qw{
+    /etc/security/limits.d/mmonit.conf
+    /root/mmonit.log
+  } ], ensure => 'absent';
 };
 
 task 'remove' => sub {
@@ -158,5 +168,9 @@ chown -R mmonit:mmonit "<%= $mmonit->{workdir} %>/logs"
 
 echo "Done MMonit install"
 echo "$( date +%s )" > "/root/mmonit.state"
+@end
+
+@mmonit_tmpfiles
+/bin/systemd-tmpfiles --create /etc/tmpfiles.d/mmonit.conf
 @end
 

@@ -215,21 +215,16 @@ task 'setup', sub {
   symlink "/etc/sysctl.conf", "/etc/sysctl.d/99-sysctl.conf";
 
   for my $name ( keys %{ $system->{sysctl} } ) {
-    my $sysctl = $system->{sysctl}{ $name };
+    my $enabled = $system->{sysctl}{ $name };
 
-    $sysctl->{enabled}  //= 0;
-    $sysctl->{name}     ||= $name;
-
-    set sysctl => $sysctl;
-
-    if ( $sysctl->{enabled} ) {
-      file "/etc/sysctl.d/$sysctl->{name}.conf", ensure => 'present',
+    if ( $enabled ) {
+      file "/etc/sysctl.d/$name.conf", ensure => 'present',
         owner => 'root', group => 'root', mode => 644,
         content => template( "files/sysctl.conf.$name" );
     }
 
     else {
-      file "/etc/sysctl.d/$sysctl->{name}.conf", ensure => 'absent';
+      file "/etc/sysctl.d/$name.conf", ensure => 'absent';
     }
   }
 

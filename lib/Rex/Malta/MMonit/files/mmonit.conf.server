@@ -13,7 +13,7 @@
 
            <ErrorLogger directory="logs" fileName="error.log" rotate="week" />
 
-           <Host name="localhost" appBase="." address="<%= $mmonit->{address}[0] %>" certificate="<%= $mmonit->{cert} %>">
+           <Host name="localhost" appBase="." address="<%= $mmonit->{address}[0] %>" certificate="<%= $mmonit->{path_fullcert} %>">
 
                <!--
                <AccessLogger directory="logs" fileName="localhost_access.log" rotate="week" />
