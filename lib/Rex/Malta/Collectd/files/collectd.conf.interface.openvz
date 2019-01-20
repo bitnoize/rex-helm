@@ -1,7 +1,0 @@
-LoadPlugin interface
-
-<Plugin "interface">
-  Interface "/^venet/"
-  IgnoreSelected false
-</Plugin>
-

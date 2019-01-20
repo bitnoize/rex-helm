@@ -1,0 +1,5 @@
+# resolv.conf - resolver configuration file
+# <%= Rex::Helm::header( ) %>
+
+<%= join "\n", map { "nameserver $_" } @{ $unbound->{nameserver} } %>
+

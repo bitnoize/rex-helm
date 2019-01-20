@@ -1,0 +1,24 @@
+check process openssh
+    with pidfile /run/sshd.pid
+    group system
+    group openssh
+    start program = "/usr/sbin/service ssh start"
+    stop  program = "/usr/sbin/service ssh stop"
+    if failed
+        host <%= $openssh->{address}[0] %>
+        port <%= $openssh->{port} %>
+        use type tcp protocol ssh
+        with timeout <%= $openssh->{monit}{timeout} %> seconds
+        for 2 cycles
+    then alert
+    if 5 restarts within 5 cycles then timeout
+    depend openssh_bin
+
+check file openssh_bin
+    with path /usr/sbin/sshd
+    group openssh
+    if failed checksum        then unmonitor
+    if failed permission  755 then unmonitor
+    if failed uid root        then unmonitor
+    if failed gid root        then unmonitor
+

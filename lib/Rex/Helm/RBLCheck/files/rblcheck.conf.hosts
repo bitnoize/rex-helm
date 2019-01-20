@@ -1,0 +1,5 @@
+# RBL hosts
+# <%= Rex::Helm::header( ) %>
+
+<%= join "\n", map { "$_" } @{ $rblcheck->{hosts} } %>
+

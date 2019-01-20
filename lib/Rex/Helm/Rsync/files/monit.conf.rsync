@@ -1,0 +1,24 @@
+check process rsync
+    with pidfile /run/rsyncd.pid
+    group system
+    group rsync
+    start program = "/usr/sbin/service rsync start"
+    stop  program = "/usr/sbin/service rsync stop"
+    if failed
+        host <%= $rsync->{address}[0] %>
+        port <%= $rsync->{port} %>
+        use type tcp
+        with timeout <%= $rsync->{monit}{timeout} %> seconds
+        for 2 cycles
+    then restart
+    if 5 restarts within 5 cycles then timeout
+    depend rsync_bin
+
+check file rsync_bin
+    with path /usr/bin/rsync
+    group rsync
+    if failed checksum        then unmonitor
+    if failed permission  755 then unmonitor
+    if failed uid root        then unmonitor
+    if failed gid root        then unmonitor
+

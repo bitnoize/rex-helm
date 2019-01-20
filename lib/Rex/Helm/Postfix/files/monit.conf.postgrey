@@ -1,0 +1,24 @@
+check process postgrey
+    with pidfile /run/postgrey.pid
+    group mail
+    group postgrey
+    start program = "/usr/sbin/service postgrey start"
+    stop  program = "/usr/sbin/service postgrey stop"
+    if failed
+        host <%= $postfix->{address} %>
+        port <%= $postfix->{port} %>
+        use type tcp with protocol smtp
+        with timeout <%= $postfix->{monit}{timeout} %> seconds
+        for 2 times within 3 cycles
+    then alert
+    if 5 restarts with 5 cycles then timeout
+    depend postgrey_bin
+
+check file postgrey_bin
+    with path /usr/sbin/postgrey
+    group postgrey
+    if failed checksum        then unmonitor
+    if failed permission  755 then unmonitor
+    if failed uid root        then unmonitor
+    if failed gid postdrop    then unmonitor
+

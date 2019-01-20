@@ -1,0 +1,13 @@
+# sources.list(5) - APT data sources
+# <%= Rex::Helm::header( ) %>
+
+deb http://httpredir.debian.org/debian/ stretch main non-free contrib
+deb-src http://httpredir.debian.org/debian/ stretch main non-free contrib
+
+deb http://security.debian.org/ stretch/updates main contrib non-free
+deb-src http://security.debian.org/ stretch/updates main contrib non-free
+
+# stretch-updates
+deb http://httpredir.debian.org/debian/ stretch-updates main contrib non-free
+deb-src http://httpredir.debian.org/debian/ stretch-updates main contrib non-free
+

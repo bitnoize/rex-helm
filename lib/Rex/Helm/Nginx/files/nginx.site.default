@@ -1,0 +1,8 @@
+server {
+<%= join "\n", map { sprintf "    listen %s:%s;", $_, $site->{port} } @{ $site->{address} } %>
+<%= join "\n", map { sprintf "    server_name %s;", $_ } @{ $site->{domain} } %>
+
+    root /var/www/default;
+    index index.html;
+}
+

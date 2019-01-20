@@ -1,0 +1,15 @@
+# start rsync in daemon mode
+RSYNC_ENABLE="true"
+
+# Configuration file for rsync
+#RSYNC_CONFIG_FILE="/etc/rsyncd.conf"
+
+# Extra options to give rsync
+RSYNC_OPTS="-4"
+
+# Run rsyncd at a nice level
+#RSYNC_NICE=''
+
+# Run rsyncd with ionice
+#RSYNC_IONICE='-c3'
+

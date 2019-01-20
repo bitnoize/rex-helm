@@ -1,0 +1,14 @@
+/var/log/unbound.log
+{
+    daily
+    rotate 1
+    maxage 1
+    missingok
+    notifempty
+    delaycompress
+    compress
+    postrotate
+        service rsyslog rotate > /dev/null
+    endscript
+}
+

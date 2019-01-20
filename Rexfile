@@ -72,6 +72,6 @@ set 'modules' => [
   'Gitweb',     # Gitweb service
 ];
 
-require Rex::Malta;
+require Rex::Helm;
 
 1;

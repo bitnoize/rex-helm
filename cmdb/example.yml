@@ -1,0 +1,34 @@
+#
+# example
+#
+
+inventory:
+  hostname:     example
+  service:      test
+  machine:      kvm-guest
+
+system:
+  rootpw:       'very!secret'
+  release:      debian-stretch
+  packages:     [ socat, tmux, mc ]
+
+network:
+  ethernet:
+    'eth0':
+      address:      192.168.10.10
+      netmask:      255.255.255.0
+      gateway:      192.168.10.1
+
+firewall:
+  type:         simple
+
+openssh:
+  address:      192.168.10.10
+  port:         22
+
+monit:
+  active:       0
+
+collectd:
+  active:       0
+

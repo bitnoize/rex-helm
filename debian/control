@@ -1,16 +1,17 @@
-Source: rex-malta
+Source: rex-helm
 Section: admin
 Priority: optional
 Maintainer: Secure Builder <build@extradebs>
 Build-Depends: debhelper (>= 9)
 Build-Depends-Indep: rex (>= 1.4.0)
 Standards-Version: 3.9.8
-Homepage: https://github.com/bitnoize/rex-malta
+Homepage: https://github.com/bitnoize/rex-helm
 
-Package: rex-malta
+Package: rex-helm
 Architecture: all
-Depends: rex (>= 1.4.0), pwgen, figlet, sipcalc,
+Depends:
   ${misc:Depends},
-  ${perl:Depends}
+  ${perl:Depends},
+  rex (>= 1.4.0), pwgen, figlet, sipcalc
 Description: My own high-level DevOps implementation on top of the Rex framework
 

@@ -1,5 +1,0 @@
-# Entire iperf(1) servers list
-# <%= Rex::Malta::header( ) %>
-
-<%= join "\n", map { join ":", @$_ } @{ $iperf->{targets} } %>
-

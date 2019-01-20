@@ -1,0 +1,3 @@
+if $programname startswith 'unbound' then /var/log/unbound.log
+& stop
+

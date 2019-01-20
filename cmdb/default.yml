@@ -16,25 +16,18 @@ system:
 # kernver:      ''
 # paranoid:     0
 # aptproxy:     http://127.0.0.1:9080
-# backports:    0
+  backports:    1
 # extradebs:    0
 # extralink:    http://debs.test.net
 # packages:     [ ]
   sysctl:
-    'ip_forward':
-      enabled:      0
-      name:         '15-ip_forward'
-
-    'route_localnet':
-      enabled:      0
-      name:         '25-route_localnet'
-
-    'disable_ipv6':
-      enabled:      0
-      name:         '95-disable_ipv6'
+    '15-ip_forward':      0
+    '25-route_localnet':  0
+    '95-disable_ipv6':    0
 
 # swapfile:     /swap
 # swapdize:     1024k
+
 
 network:
   active:       1
@@ -47,17 +40,20 @@ network:
 #   link:         [ 100Mbit, 100Mbit ]
 #   misc:         [  10Mbit,  10Mbit ]
 
+
 firewall:
   active:       1
-# type:         none
+# type:         simple
 # inline:       { }
+
 
 monit:
   active:       1
 # address:      127.0.0.1
 # port:         2812
+# cert:         ~
 # auth:         monit:secret
-# mmonit:       https://monit:secret@monit.test.net:3127/collector
+# mmonit:       ''
   confs:
     'system':
       enabled:      1
@@ -67,16 +63,16 @@ monit:
       enabled:      0
 #     name:         sensors
 
+
 collectd:
-  active:       0
+  active:       1
 # server:       0
-# interval:     60
-# remote:       graph.test.net
-# interface:    eth0
-# address:      0.0.0.0
+# remote:       ~
+# interface:    ~
+# address:      ~
 # port:         25826
-# username:     stats
-# password:     'secret'
+# username:     ''
+# password:     ''
   confs:
     'syslog':
       enabled:      1
@@ -114,11 +110,17 @@ collectd:
       enabled:      1
 #     name:         rrdtool
 
+  monit:
+    enabled:      1
+#   timeout:      10
+
+
 rsyslog:
   active:       1
 # confs:        { }
   monit:
     enabled:      1
+
 
 logrotate:
   active:       1
@@ -147,6 +149,7 @@ logrotate:
 #     enabled:      1
 #     name:         collectd
 
+
 cron:
   active:       1
 # crontab:      { }
@@ -157,6 +160,7 @@ cron:
   monit:
     enabled:      1
 
+
 openssh:
   active:       1
 # address:      0.0.0.0
@@ -164,27 +168,29 @@ openssh:
   monit:
     enabled:      1
 
+
 ntp:
   active:       1
   monit:
     enabled:      1
 
-iperf:
-  active:       0
-# server:       0
-# address:      127.0.0.1
-# port:         5281
-# targets:      [ ]
-  monit:
-    enabled:      1
-#   address:      127.0.0.1
-#   port:         5281
-#   timeout:      10
 
 qemukvm:
   active:       0
   monit:
     enabled:      1
+
+
+iperf:
+  active:       0
+# server:       0
+# address:      0.0.0.0
+# port:         5281
+# targets:      [ ]
+  monit:
+    enabled:      1
+#   timeout:      10
+
 
 dnsmasq:
   active:       0
@@ -195,15 +201,14 @@ dnsmasq:
 # conf:         { }
   monit:
     enabled:      1
-#   address:      127.0.0.1
-#   port:         53
 #   timeout:      10
+
 
 unbound:
   active:       0
 # address:      127.0.0.1
 # port:         53
-# allowed:      127.0.0.1/8
+# allowed:      [ 127.0.0.1/8 ]
   conf:
     'qname-minimisation':
       enabled:      1
@@ -215,32 +220,23 @@ unbound:
 
   monit:
     enabled:      1
-#   address:      127.0.0.1
-#   port:         53
 #   timeout:      10
+
+
+pki:
+  active:       0
+  options:      '--agree-tos --webroot -w /var/www/default'
+  certs:        { }
+
 
 nginx:
   active:       0
   conf:
-    'cache':
-      enabled:      1
-#     name:         cache
-
-    'gzip':
-      enabled:      1
-#     name:         gzip
-
-    'resolver':
-      enabled:      1
-#     name:         resolver
-
-    'ssl':
-      enabled:      1
-#     name:         ssl
-
-    'cloudflare':
-      enabled:      0
-#     name:         cloudflare
+    'cache':        1
+    'gzip':         1
+    'resolver':     1
+    'ssl':          1
+    'cloudflare':   0
 
 # snippets:     { }
 # secrets:      { }
@@ -249,22 +245,16 @@ nginx:
     'default':
       enabled:      1
 #     name:         default
+#     domain:       '""'
 #     address:      127.0.0.1
 #     port:         80
 #     ssl_port:     443
-#     secret:       ''
-#     cert:         ''
+#     cert:         ~
  
   monit:
     enabled:      1
-#   address:      127.0.0.1
-#   port:         80
 #   timeout:      10
 
-certbot:
-  active:       0
-# options:      '--agree-tos'
-# certs:        { }
 
 mysql:
   active:       0
@@ -275,21 +265,22 @@ mysql:
   monit:
     enabled:      1
 
+
 redis:
   active:       0
 # address:      127.0.0.1
 # port:         6379
   monit:
     enabled:      1
-#   address:      127.0.0.1
-#   port:         6379
 #   timeout:      10
 #   dumpsize:     100
+
 
 postfix:
   active:       0
   monit:
     enabled:      1
+
 
 rblcheck:
   active:       0
@@ -299,27 +290,35 @@ rblcheck:
     enabled:      1
 #   timeout:      10
 
+
 mmonit:
   active:       0
 # version:      3.7.2
 # platform:     linux-x64
 # path:         /opt/mmonit
-# address:      127.0.0.1
+# address:      0.0.0.0
 # port:         3127
-# schema:       mysql://monit:monit@127.0.0.1/mmonit
+# cert:         ~
+# schema:       postgresql://monit:monit@127.0.0.1/mmonit
 # owner:        Unknown
 # lecense:      none
 
+
 rsync:
   active:       0
-# address:      127.0.0.1
+# address:      ~
 # port:         873
 # storage:      /var/www/stuff
+  monit:
+    enabled:      1
+#   timeout:      10
+
 
 gitweb:
   active:       0
 # projectroot:  /var/lib/git
 # site_name:    Simple
+
 
 freight:
   active:       0
@@ -329,8 +328,10 @@ freight:
 # label:        Extradebs
 # gpgkey:       build@extradebs
 
-collectdweb:
+
+cgp:
   active:       0
-# distrib:      https://github.com/httpdss/collectd-web.git
-# workdir:      /var/www/collectd-web
+# distrib:      https://github.com/pommi/CGP.git
+# workdir:      /var/www/cgp
+
 

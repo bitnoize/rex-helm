@@ -1,0 +1,3 @@
+if $programname startswith 'dnsmasq' then /var/log/dnsmasq.log
+& stop
+

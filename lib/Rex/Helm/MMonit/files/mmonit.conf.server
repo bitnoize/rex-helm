@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Server>
+   <Service>
+       <!-- Define a SSL/TLS HTTP/1.1 Connector on port 8443 -->
+       <Connector address="<%= $mmonit->{address} %>" port="<%= $mmonit->{port} %>" processors="10" secure="true" />
+       
+       <Engine name="mmonit" defaultHost="localhost" fileCache="10MB">
+
+           <Realm url="<%= $mmonit->{schema} %>"
+                  minConnections="5"
+                  maxConnections="25"
+                  reapConnections="300" />
+
+           <ErrorLogger directory="logs" fileName="error.log" rotate="week" />
+
+           <Host name="localhost" appBase="." address="<%= $mmonit->{address} %>" certificate="<%= $mmonit->{path_fullcert} %>">
+
+               <!--
+               <AccessLogger directory="logs" fileName="localhost_access.log" rotate="week" />
+               -->
+
+               <Logger directory="logs" fileName="mmonit.log" rotate="week" timestamp="true" />
+
+               <!-- The Default Context -->
+               <Context path="" docBase="docroot" sessionTimeout="1800"
+                        maxActiveSessions="1024" saveSessions="true" />
+
+               <Context path="/collector" docBase="docroot/collector" />
+
+           </Host>
+
+       </Engine>
+   </Service>
+
+   <License owner="<%= $mmonit->{owner} %>">
+<%= $mmonit->{license} %>
+   </License>
+</Server>

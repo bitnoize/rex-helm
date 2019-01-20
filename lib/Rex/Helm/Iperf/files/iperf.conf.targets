@@ -1,0 +1,5 @@
+# Entire iperf(1) servers list
+# <%= Rex::Helm::header( ) %>
+
+<%= join "\n", map { join ":", @$_ } @{ $iperf->{targets} } %>
+

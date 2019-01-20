@@ -1,0 +1,34 @@
+check process collectd
+    with pidfile /run/collectd.pid
+    group system
+    group collectd
+    start program = "/usr/sbin/service collectd start"
+    stop  program = "/usr/sbin/service collectd stop"
+<% if ( $collectd->{server} ) { %>
+    if failed
+        host <%= $collectd->{address}[0] %>
+        port <%= $collectd->{port} %>
+        use type udp
+        with timeout <%= $collectd->{monit}{timeout} %> seconds
+        for 2 cycles
+    then restart
+<% } else { %>
+    if failed
+        host <%= $collectd->{remote} %>
+        port <%= $collectd->{port} %>
+        use type udp
+        with timeout <%= $collectd->{monit}{timeout} %> seconds
+        for 2 cycles
+    then restart
+<% } %>
+    if 5 restarts within 5 cycles then timeout
+    depend collectd_bin
+
+check file collectd_bin
+    with path /usr/sbin/collectd
+    group collectd
+    if failed checksum        then unmonitor
+    if failed permission  755 then unmonitor
+    if failed uid root        then unmonitor
+    if failed gid root        then unmonitor
+

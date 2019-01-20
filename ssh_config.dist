@@ -1,16 +1,16 @@
-# OpenSSH Rulz!
+# SSH Rulz!
 
 HashKnownHosts no
 ForwardAgent yes
 
 IdentityFile ~/.ssh/my_own_key
 
-Host sonata
+Host example
   User root
   HostName 192.168.10.10
 
 #
-# Traffic via proxy
+# Traffic via TOR
 #
 
 #Host *
