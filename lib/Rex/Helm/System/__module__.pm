@@ -277,8 +277,7 @@ task 'swapon' => sub {
   return Rex::Logger::info( "Swap $system->{swapfile} exists" => 'warn' )
     if is_file $system->{swapfile};
 
-  run 'swapon' => timeout => 300, command => template( "\@swapon" );
-  say last_command_output if Rex::Helm::DEBUG;
+  run 'swapon' => timeout => 300, auto_die => TRUE, command => template( "\@swapon" );
 };
 
 task 'swapoff' => sub {
@@ -290,8 +289,7 @@ task 'swapoff' => sub {
   return Rex::Logger::info( "Swap $system->{swapfile} missing" => 'warn' )
     unless is_file $system->{swapfile};
 
-  run 'swapoff', timeout => 300, command => template( "\@swapoff" );
-  say last_command_output if Rex::Helm::DEBUG;
+  run 'swapoff', timeout => 300, auto_die => TRUE, command => template( "\@swapoff" );
 };
 
 task 'sensors' => sub {

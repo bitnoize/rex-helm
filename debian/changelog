@@ -1,4 +1,4 @@
-rex-helm (0.06-1) unstable; urgency=medium
+rex-helm (0.06-2) unstable; urgency=medium
 
   * New upstream version 0.06
   * Project name changed to Rex::Helm

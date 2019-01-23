@@ -84,6 +84,20 @@ task 'setup' => sub {
   service 'collectd', ensure => 'started';
   service 'collectd' => 'restart';
 
+  if ( is_installed 'rsyslog' ) {
+    file "/etc/rsyslog.d/collectd.conf", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/rsyslog.conf.collectd" );
+
+    service 'rsyslog' => 'restart';
+  }
+
+  if ( is_installed 'logrotate' ) {
+    file "/etc/logrotate.d/collectd", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/logrotate.conf.collectd" );
+  }
+
   if ( is_installed 'monit' ) {
     file "/etc/monit/conf-available/collectd", ensure => 'present',
       owner => 'root', group => 'root', mode => 644,
@@ -132,6 +146,25 @@ task 'remove' => sub {
     /etc/default/collectd
     /etc/collectd
   } ], ensure => 'absent';
+
+  if ( is_installed 'rsyslog' ) {
+    file "/etc/rsyslog.d/collectd.conf", ensure => 'absent';
+
+    service 'rsyslog' => 'restart';
+  }
+
+  if ( is_installed 'logrotate' ) {
+    file "/etc/logrotate.d/collectd", ensure => 'absent';
+  }
+
+  if ( is_installed 'monit' ) {
+    file [ qw{
+      /etc/monit/conf-available/collectd
+      /etc/monit/conf-enabled/collectd
+    } ], ensure => 'absent';
+
+    service 'monit' => 'restart';
+  }
 };
 
 task 'status' => sub {

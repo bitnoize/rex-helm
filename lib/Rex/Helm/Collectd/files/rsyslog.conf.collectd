@@ -1,0 +1,3 @@
+if $programname startswith 'collectd' then /var/log/collectd.log
+& stop
+

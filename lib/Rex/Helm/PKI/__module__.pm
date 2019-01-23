@@ -82,7 +82,7 @@ task 'setup' => sub {
 
           else {
             Rex::Logger::info( "PKI certbot certonly exit code: $?" => 'error' );
-            say last_command_output if Rex::Helm::DEBUG;
+            say last_command_output;
 
             delete_lines_matching "/etc/certificates", matching => qr/^$cert->{name}/;
           }
