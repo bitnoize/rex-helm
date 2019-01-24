@@ -114,7 +114,6 @@ task 'setup' => sub {
 
     service 'monit' => 'restart';
   }
-
 };
 
 task 'clean' => sub {
@@ -158,10 +157,8 @@ task 'remove' => sub {
   }
 
   if ( is_installed 'monit' ) {
-    file [ qw{
-      /etc/monit/conf-available/collectd
-      /etc/monit/conf-enabled/collectd
-    } ], ensure => 'absent';
+    file "/etc/monit/conf-available/collectd", ensure => 'absent';
+    unlink "/etc/monit/conf-enabled/collectd";
 
     service 'monit' => 'restart';
   }

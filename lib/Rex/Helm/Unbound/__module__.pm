@@ -142,6 +142,13 @@ task 'remove' => sub {
 
     service 'monit' => 'restart';
   }
+
+  if ( is_installed 'monit' ) {
+    file "/etc/monit/conf-available/unbound", ensure => 'absent';
+    unlink "/etc/monit/conf-enabled/unbound";
+
+    service 'monit' => 'restart';
+  }
 };
 
 task 'status' => sub {

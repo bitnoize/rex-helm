@@ -116,10 +116,8 @@ task 'remove' => sub {
   run 'systemd_restart', command => "/bin/systemctl daemon-reload";
 
   if ( is_installed 'monit' ) {
-    file [ qw{
-      /etc/monit/conf-available/iperf
-      /etc/monit/conf-enabled/iperf
-    } ], ensure => 'absent';
+    file "/etc/monit/conf-available/iperf", ensure => 'absent';
+    unlink "/etc/monit/conf-enabled/iperf";
 
     service 'monit' => 'restart';
   }

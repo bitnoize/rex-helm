@@ -79,10 +79,8 @@ task 'remove' => sub {
   } ], ensure => 'absent';
 
   if ( is_installed 'monit' ) {
-    file [ qw{
-      /etc/monit/conf-available/qemukvm
-      /etc/monit/conf-enabled/qemukvm
-    } ], ensure => 'absent';
+    file "/etc/monit/conf-available/qemukvm", ensure => 'absent';
+    unlink "/etc/monit/conf-enabled/qemukvm";
 
     service 'monit' => 'restart';
   }

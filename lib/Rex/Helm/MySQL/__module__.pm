@@ -127,10 +127,8 @@ task 'remove' => sub {
   }
 
   if ( is_installed 'monit' ) {
-    file [ qw{
-      /etc/monit/conf-available/mysql
-      /etc/monit/conf-enabled/mysql
-    } ], ensure => 'absent';
+    file "/etc/monit/conf-available/mysql", ensure => 'absent';
+    unlink "/etc/monit/conf-enabled/mysql";
 
     service 'monit' => 'restart';
   }

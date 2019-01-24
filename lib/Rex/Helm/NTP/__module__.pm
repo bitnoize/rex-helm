@@ -71,9 +71,14 @@ task 'remove' => sub {
   file [ qw{
     /etc/default/ntp
     /etc/ntp.conf
-    /etc/monit/conf-available/ntp
-    /etc/monit/conf-enabled/ntp
   } ], ensure => 'absent';
+
+  if ( is_installed 'monit' ) {
+    file "/etc/monit/conf-available/ntp", ensure => 'absent';
+    unlink "/etc/monit/conf-enabled/ntp";
+
+    service 'monit' => 'restart';
+  }
 };
 
 task 'status' => sub {

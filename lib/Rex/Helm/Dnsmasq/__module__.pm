@@ -136,10 +136,8 @@ task 'remove' => sub {
   }
 
   if ( is_installed 'monit' ) {
-    file [ qw{
-      /etc/monit/conf-available/dnsmasq
-      /etc/monit/conf-enabled/dnsmasq
-    } ], ensure => 'absent';
+    file "/etc/monit/conf-available/dnsmasq", ensure => 'absent';
+    unlink "/etc/monit/conf-enabled/dnsmasq";
 
     service 'monit' => 'restart';
   }

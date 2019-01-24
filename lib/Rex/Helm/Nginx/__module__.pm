@@ -137,16 +137,14 @@ task 'setup' => sub {
         my $cert = Rex::Helm::PKI::certificate( $site->{cert} );
 
         if ( $cert ) {
-          symlink $cert->{path_crt}, "/etc/nginx/certs/$site->{cert}.crt";
-          symlink $cert->{path_key}, "/etc/nginx/certs/$site->{cert}.key";
+          symlink $cert->{path_crt}, "/etc/nginx/certs/$site->{cert}.crt"
+            unless is_readable "/etc/nginx/certs/$site->{cert}.crt";
+
+          symlink $cert->{path_key}, "/etc/nginx/certs/$site->{cert}.key"
+            unless is_readable "/etc/nginx/certs/$site->{cert}.crt";
         }
 
-        else {
-          unlink "/etc/nginx/certs/$site->{cert}.crt";
-          unlink "/etc/nginx/certs/$site->{cert}.key";
-
-          $site_ready = 0;
-        }
+        else { $site_ready = 0 }
       }
 
       if ( $site_ready ) {
@@ -235,9 +233,14 @@ task 'remove' => sub {
     /var/cache/nginx
     /var/log/nginx
     /etc/logrotate.d/nginx
-    /etc/monit/conf-available/nginx
-    /etc/monit/conf-enabled/nginx
   } ], ensure => 'absent';
+
+  if ( is_installed 'monit' ) {
+    file "/etc/monit/conf-available/nginx", ensure => 'absent';
+    unlink "/etc/monit/conf-enabled/nginx";
+
+    service 'monit' => 'restart';
+  }
 };
 
 task 'status' => sub {

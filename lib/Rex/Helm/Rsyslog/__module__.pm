@@ -81,15 +81,15 @@ task 'clean' => sub {
   return unless my $rsyslog = config;
 
   file [ qw{
-    /etc/monit/conf-available/syslog
-    /etc/monit/conf-enabled/syslog
-
     /var/log/mail.err
     /var/log/mail.warn
     /var/log/mail.info
     /var/log/lpr.log
     /var/log/news.log
   } ], ensure => 'absent';
+
+  unlink "/etc/monit/conf-available/syslog";
+  unlink "/etc/monit/conf-enabled/syslog";
 };
 
 task 'remove' => sub {
@@ -98,10 +98,8 @@ task 'remove' => sub {
   # Do NOT remove rsyslog
 
   if ( is_installed 'monit' ) {
-    file [ qw{
-      /etc/monit/conf-available/rsyslog
-      /etc/monit/conf-enabled/rsyslog
-    } ], ensure => 'absent';
+    file "/etc/monit/conf-available/rsyslog", ensure => 'absent';
+    unlink "/etc/monit/conf-enabled/rsyslog";
 
     service 'monit' => 'restart';
   }

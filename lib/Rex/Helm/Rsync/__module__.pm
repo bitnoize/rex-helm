@@ -47,6 +47,23 @@ task 'setup' => sub {
 
   service 'rsync', ensure => 'started';
   service 'rsync' => 'restart';
+
+  if ( is_installed 'monit' ) {
+    file "/etc/monit/conf-available/rsync", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/monit.conf.rsync" );
+
+    if ( $rsync->{monit}{enabled} ) {
+      symlink "/etc/monit/conf-available/rsync",
+        "/etc/monit/conf-enabled/rsync";
+    }
+
+    else {
+      unlink "/etc/monit/conf-enabled/rsync";
+    }
+
+    service 'monit' => 'restart';
+  }
 };
 
 task 'clean' => sub {
@@ -63,6 +80,13 @@ task 'remove' => sub {
     /etc/default/rsync
     /etc/rsyncd.conf
   } ], ensure => 'absent';
+
+  if ( is_installed 'monit' ) {
+    file "/etc/monit/conf-available/rsync", ensure => 'absent';
+    unlink "/etc/monit/conf-enabled/rsync";
+
+    service 'monit' => 'restart';
+  }
 };
 
 task 'status' => sub {

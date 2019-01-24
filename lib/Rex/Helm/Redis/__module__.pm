@@ -99,10 +99,8 @@ task 'remove' => sub {
   }
 
   if ( is_installed 'monit' ) {
-    file [ qw{
-      /etc/monit/conf-available/redis
-      /etc/monit/conf-enabled/redis
-    } ], ensure => 'absent';
+    file "/etc/monit/conf-available/redis", ensure => 'absent';
+    unlink "/etc/monit/conf-enabled/redis";
 
     service 'monit' => 'restart';
   }
