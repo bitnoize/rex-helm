@@ -141,7 +141,7 @@ task 'setup' => sub {
             unless is_readable "/etc/nginx/certs/$site->{cert}.crt";
 
           symlink $cert->{path_key}, "/etc/nginx/certs/$site->{cert}.key"
-            unless is_readable "/etc/nginx/certs/$site->{cert}.crt";
+            unless is_readable "/etc/nginx/certs/$site->{cert}.key";
         }
 
         else { $site_ready = 0 }

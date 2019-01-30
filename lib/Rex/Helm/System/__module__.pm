@@ -48,11 +48,11 @@ task 'stamp', sub {
   # so do not use config in this task.
 
   my $system = {
-    hostname  => param_lookup( 'hostname' ),
-    address   => param_lookup( 'address' ),
+    hostname  => param_lookup( 'name' ),
+    address   => param_lookup( 'addr' ),
   };
 
-  die "Both of --hostname and --address are required\n"
+  die "Both of --name and --addr are required\n"
     unless $system->{hostname} and $system->{address};
 
   inspect $system if Rex::Helm::DEBUG;
