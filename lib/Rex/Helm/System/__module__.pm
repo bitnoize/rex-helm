@@ -229,6 +229,8 @@ task 'setup', sub {
   }
 
   run 'sysctl_reload', command => "/sbin/sysctl --system";
+
+  service 'systemd-timesyncd', ensure => 'started';
 };
 
 task 'clean' => sub {
