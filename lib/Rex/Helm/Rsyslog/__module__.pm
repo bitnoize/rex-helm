@@ -56,6 +56,14 @@ task 'setup' => sub {
     }
   }
 
+  # debian-jessie fix
+  mkdir "/usr/lib/rsyslog" unless is_dir "/usr/lib/rsyslog";
+
+  file "/usr/lib/rsyslog/rsyslog-rotate", ensure => 'present',
+    owner => 'root', group => 'root', mode => 755,
+    content => template( "files/rsyslog-rotate" ),
+    no_overwrite => TRUE;
+
   service 'rsyslog', ensure => 'started';
   service 'rsyslog' => 'restart';
 
