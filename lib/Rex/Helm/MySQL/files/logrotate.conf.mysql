@@ -1,6 +1,5 @@
 /var/log/mysql/mysql.log
 /var/log/mysql/mysql-slow.log
-/var/log/mysql/mariadb-slow.log
 /var/log/mysql/error.log
 {
     daily
