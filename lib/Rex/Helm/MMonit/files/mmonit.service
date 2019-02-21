@@ -1,6 +1,6 @@
 [Unit]
 Description=Easy, proactive monitoring of Unix systems
-After=network.target
+After=network.target postgresql.service
 
 [Service]
 User=mmonit

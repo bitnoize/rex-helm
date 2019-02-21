@@ -1,8 +1,8 @@
 /var/log/nginx/*.log
 {
     daily
-    rotate 7
-    maxage 7
+    rotate 30
+    maxage 30
     missingok
     compress
     delaycompress
