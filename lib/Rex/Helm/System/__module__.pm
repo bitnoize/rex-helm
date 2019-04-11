@@ -183,6 +183,19 @@ task 'setup', sub {
     } ], ensure => 'absent';
   }
 
+  my @archive = qw/debian-jessie/;
+  my $archive = grep { $system->{release} eq $_ } @archive;
+
+  if ( $archive ) {
+    file "/etc/apt/apt.conf.d/20validity", ensure => 'present',
+      owner => 'root', group => 'root', mode => 644,
+      content => template( "files/apt_conf.20validity" );
+  }
+
+  else {
+    file "/etc/apt/apt.conf.d/20validity", ensure => 'absent';
+  }
+
   update_package_db;
 
   my @packages = (

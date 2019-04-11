@@ -1,13 +1,9 @@
 # sources.list(5) - APT data sources
 # <%= Rex::Helm::header( ) %>
 
-deb http://httpredir.debian.org/debian/ jessie main non-free contrib
-deb-src http://httpredir.debian.org/debian/ jessie main non-free contrib
+deb http://cdn-fastly.deb.debian.org/debian/ jessie main contrib non-free
+deb-src http://cdn-fastly.deb.debian.org/debian/ jessie main contrib non-free
 
 deb http://security.debian.org/ jessie/updates main contrib non-free
 deb-src http://security.debian.org/ jessie/updates main contrib non-free
-
-# jessie-updates
-deb http://httpredir.debian.org/debian/ jessie-updates main contrib non-free
-deb-src http://httpredir.debian.org/debian/ jessie-updates main contrib non-free
 
