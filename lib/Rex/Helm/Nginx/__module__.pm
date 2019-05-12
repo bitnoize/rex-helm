@@ -13,9 +13,11 @@ sub config {
 
   my $nginx = {
     active      => $config->{active}    // FALSE,
+    package     => $config->{package}   || "nginx-light",
     address     => $config->{address}   || "0.0.0.0",
     port        => $config->{port}      || 80,
     ssl_port    => $config->{ssl_port}  || 443,
+    resolver    => $config->{resolver}  || [ ],
     conf        => $config->{conf}      || { },
     snippets    => $config->{snippets}  || { },
     secrets     => $config->{secrets}   || { },
@@ -34,7 +36,7 @@ sub config {
 task 'setup' => sub {
   return unless my $nginx = config;
 
-  pkg [ qw/nginx/ ], ensure => 'present';
+  pkg [ $nginx->{package} ], ensure => 'present';
 
   file "/etc/default/nginx", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
@@ -118,8 +120,9 @@ task 'setup' => sub {
     $site->{port}       ||= $nginx->{port};
     $site->{ssl_port}   ||= $nginx->{ssl_port};
     $site->{cert}       ||= undef;
+    $site->{backend}    ||= "127.0.0.1:8000";
 
-    for ( qw/domain address/ ) {
+    for ( qw/address backend/ ) {
       $site->{ $_ } = [ $site->{ $_ } ]
         unless ref $site->{ $_ } eq 'ARRAY';
     }
@@ -169,6 +172,9 @@ task 'setup' => sub {
     }
   }
 
+  file "/var/cache/nginx", ensure => 'directory',
+    owner => 'root', group => 'root', mode => 755;
+
   service 'nginx', ensure => 'started';
   service 'nginx' => 'restart';
 
@@ -215,6 +221,9 @@ task 'clean' => sub {
     /etc/nginx/dhparam.pem
     /etc/nginx/debs.secrets
     /etc/nginx/team.secrets
+    /etc/nginx/conf.d/cache.conf
+    /etc/nginx/snippets/fastcgi-php.conf
+    /etc/nginx/snippets/snakeoil.conf
   } ], ensure => 'absent';
 
   service 'nginx' => 'restart';

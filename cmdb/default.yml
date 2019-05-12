@@ -231,10 +231,15 @@ pki:
 
 nginx:
   active:       0
+# package:      nginx-light
+# address:      127.0.0.1
+# port:         80
+# ssl_port:     443
+# resolver:     [ 8.8.8.8, 8.8.4.4 ]
   conf:
-    'cache':        1
+    'file_cache':   1
     'gzip':         1
-    'resolver':     1
+    'resolver':     0
     'ssl':          1
     'cloudflare':   0
 

@@ -7,7 +7,7 @@ use Rex -feature => [ '1.4' ];
 
 use constant DEBUG => $ENV{REX_DEBUG} ? 1 : 0;
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 my $modules = get( 'modules' ) || [ ];
 include map { "Rex::Helm::$_" } @$modules;
