@@ -13,6 +13,7 @@ sub config {
 
   my $pki = {
     active      => $config->{active}  // FALSE,
+    legacy      => $config->{legacy}  // FALSE,
     options     => $config->{options} || "",
     certs       => $config->{certs}   || { },
   };
@@ -44,7 +45,18 @@ sub certificate {
 task 'setup' => sub {
   return unless my $pki = config;
 
-  pkg [ qw/certbot ssl-cert/ ], ensure => 'present';
+  pkg [ qw/ssl-cert/ ], ensure => 'present';
+
+  if ($pki->{legacy}) {
+    pkg [ qw/certbot/ ], ensure => 'absent';
+
+    run 'certbot_legacy', timeout => 300, auto_die => TRUE,
+      command => template( "\@certbot_legacy" );
+  }
+
+  else {
+    pkg [ qw/certbot/ ], ensure => 'present';
+  }
 
   file "/etc/certificates", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
@@ -153,19 +165,26 @@ task 'status' => sub {
 
 __DATA__
 
+@certbot_legacy
+curl -q "https://dl.eff.org/certbot-auto" > /usr/local/bin/certbot
+chmod 755 /usr/local/bin/certbot
+certbot -n --os-packages-only
+certbot -n --install-only
+@end
+
 @certbot_certonly
 [ <%= scalar @{ $certificate->{domain} } %> -gt 0 ] || exit 10
 
-/usr/bin/certbot certonly -n \
+certbot certonly -n \
   --cert-name <%= $certificate->{name} %> <%= $certificate->{options} %> \
   <%= join " ", map { "-d $_" } @{ $certificate->{domain} } %>
 @end
 
 @certbot_delete
-/usr/bin/certbot delete -n --cert-name <%= $certificate->{name} %>
+certbot delete -n --cert-name <%= $certificate->{name} %>
 @end
 
 @certbot_certificates
-/usr/bin/certbot certificates
+certbot certificates
 @end
 
