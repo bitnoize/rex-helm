@@ -33,7 +33,7 @@ sub config {
 
   $system->{hostname} = $info{hostname};
 
-  my @release = qw/debian-jessie debian-stretch kali-rolling/;
+  my @release = qw/debian-jessie debian-stretch debian-buster kali-rolling/;
 
   die "Invalid system release: '$system->{release}'\n"
     unless grep { $_ eq $system->{release} } @release;

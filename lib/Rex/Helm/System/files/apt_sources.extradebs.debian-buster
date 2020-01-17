@@ -1,0 +1,4 @@
+# buster-extradebs
+deb <%= $system->{extralink} %> buster main
+deb-src <%= $system->{extralink} %> buster main
+
