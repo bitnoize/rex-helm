@@ -120,9 +120,8 @@ task 'setup' => sub {
     $site->{port}       ||= $nginx->{port};
     $site->{ssl_port}   ||= $nginx->{ssl_port};
     $site->{cert}       ||= undef;
-    $site->{backend}    ||= "127.0.0.1:8000";
 
-    for ( qw/address backend/ ) {
+    for ( qw/address/ ) {
       $site->{ $_ } = [ $site->{ $_ } ]
         unless ref $site->{ $_ } eq 'ARRAY';
     }
@@ -145,6 +144,9 @@ task 'setup' => sub {
 
           symlink $cert->{path_key}, "/etc/nginx/certs/$site->{cert}.key"
             unless is_readable "/etc/nginx/certs/$site->{cert}.key";
+
+          symlink $cert->{path_chain}, "/etc/nginx/certs/$site->{cert}_chain.pem"
+            unless is_readable "/etc/nginx/certs/$site->{cert}_chain.pem";
         }
 
         else { $site_ready = 0 }

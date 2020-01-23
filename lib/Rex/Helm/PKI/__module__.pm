@@ -34,10 +34,15 @@ sub certificate {
   my ( $first ) = grep { $_ =~ qr/^$name/ } @lines;
   return unless $first;
 
-  my @cert = map { split qr/:/, $_, 3 } $first;
-  return unless $cert[0] and $cert[1] and $cert[2];
+  my @cert = map { split qr/:/, $_, 4 } $first;
+  return unless $cert[0] and $cert[1] and $cert[2] and $cert[3];
 
-  my $cert = { name => $cert[0], path_crt => $cert[1], path_key => $cert[2] };
+  my $cert = {
+    name        => $cert[0],
+    path_crt    => $cert[1],
+    path_key    => $cert[2],
+    path_chain  => $cert[3]
+  };
 
   set 'certificate' => $cert;
 }
@@ -79,8 +84,9 @@ task 'setup' => sub {
 
     case $cert->{source}, {
       'certbot' => sub {
-        $cert->{path_crt} = "/etc/letsencrypt/live/$cert->{name}/fullchain.pem";
-        $cert->{path_key} = "/etc/letsencrypt/live/$cert->{name}/privkey.pem";
+        $cert->{path_crt}   = "/etc/letsencrypt/live/$cert->{name}/fullchain.pem";
+        $cert->{path_key}   = "/etc/letsencrypt/live/$cert->{name}/privkey.pem";
+        $cert->{path_chain} = "/etc/letsencrypt/live/$cert->{name}/chain.pem";
 
         if ( $cert->{enabled} ) {
           run 'certbot_certonly', timeout => 60, auto_die => FALSE,
@@ -88,7 +94,7 @@ task 'setup' => sub {
 
           unless ( $? ) {
             append_or_amend_line "/etc/certificates",
-              line => join( ':', @$cert{ qw/name path_crt path_key/ } ),
+              line => join( ':', @$cert{ qw/name path_crt path_key path_chain/ } ),
               regexp => qr/^$cert->{name}/;
           }
 
@@ -109,8 +115,9 @@ task 'setup' => sub {
       },
 
       'ssl-cert' => sub {
-        $cert->{path_crt} = "/etc/ssl/certs/$cert->{name}.crt";
-        $cert->{path_key} = "/etc/ssl/private/$cert->{name}.key";
+        $cert->{path_crt}   = "/etc/ssl/certs/$cert->{name}.crt";
+        $cert->{path_key}   = "/etc/ssl/private/$cert->{name}.key";
+        $cert->{path_chain} = "/etc/ssl/certs/ca-certificates.crt";
 
         if ( $cert->{enabled} ) {
           file $cert->{path_crt}, ensure => 'present',
@@ -122,7 +129,7 @@ task 'setup' => sub {
             source => "files/certificate.$name.key";
 
           append_or_amend_line "/etc/certificates",
-            line => join( ':', @$cert{ qw/name path_crt path_key/ } ),
+            line => join( ':', @$cert{ qw/name path_crt path_key path_chain/ } ),
             regexp => qr/^$cert->{name}/;
         }
 

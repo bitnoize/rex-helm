@@ -200,8 +200,8 @@ task 'setup', sub {
 
   my @packages = (
     qw/procps psmisc sysfsutils attr tzdata aptitude htop/,
-    qw/anacron sudo vim curl wget git netcat-openbsd rsync/,
-    qw/bash-completion dnsutils apt-transport-https openssl/
+    qw/anacron sudo curl wget git netcat-openbsd rsync/,
+    qw/bash-completion dnsutils openssl/
   );
 
   push @packages, @{ $system->{packages} };
