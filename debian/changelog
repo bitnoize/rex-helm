@@ -1,6 +1,6 @@
-rex-helm (0.08-7) unstable; urgency=medium
+rex-helm (0.08-8) unstable; urgency=medium
 
   * New upstream version 0.08
 
- -- Dmitry Krutikov <mitya@whteam.net>  Thu, 23 Jan 2020 00:00:00 +0000
+ -- Dmitry Krutikov <mitya@whteam.net>  Fri, 25 May 2020 00:00:00 +0000
 

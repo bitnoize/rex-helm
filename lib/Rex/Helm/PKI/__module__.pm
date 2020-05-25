@@ -63,6 +63,10 @@ task 'setup' => sub {
     pkg [ qw/certbot/ ], ensure => 'present';
   }
 
+  file "/etc/cron.d/certbot", ensure => 'present',
+    owner => 'root', group => 'root', mode => 755,
+    content => template( "files/crontab.certbot" );
+
   file "/etc/certificates", ensure => 'present',
     owner => 'root', group => 'root', mode => 644,
     content => template( "files/certificates" ),
